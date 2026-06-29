@@ -1,3 +1,7 @@
+import { updateTruckLocation } from "../lib/truckTrackingService";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Truck,
@@ -8,479 +12,440 @@ import {
   AlertTriangle,
   TrendingUp,
   Calendar,
-  Bell,
-} from 'lucide-react';
-import { DashboardLayout } from '../components/layout';
+} from "lucide-react";
+
+import { DashboardLayout } from "../components/layout";
 import {
   StatCard,
   QuickAction,
   AreaChartCard,
-  BarChartCard,
-  PieChartCard,
   ActivityFeed,
-} from '../components/dashboard';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/common';
-import { useAuth } from '../hooks/useAuth';
+} from "../components/dashboard";
 
-const wasteTrendData = [
-  { name: 'Jan', value: 1200 },
-  { name: 'Feb', value: 1400 },
-  { name: 'Mar', value: 1350 },
-  { name: 'Apr', value: 1600 },
-  { name: 'May', value: 1800 },
-  { name: 'Jun', value: 2100 },
-];
+import { Card, CardHeader, CardTitle, CardContent } from "../components/common";
+import { useAuth } from "../hooks/useAuth";
 
-const wasteTypeData = [
-  { name: 'Household', value: 45 },
-  { name: 'Organic', value: 25 },
-  { name: 'Plastic', value: 15 },
-  { name: 'Paper', value: 10 },
-  { name: 'Other', value: 5 },
-];
-
-const zonePerformanceData = [
-  { name: 'Zone A', value: 95 },
-  { name: 'Zone B', value: 88 },
-  { name: 'Zone C', value: 72 },
-  { name: 'Zone D', value: 91 },
-  { name: 'Zone E', value: 85 },
-];
-
-const upcomingSchedules = [
-  { id: '1', zone: 'Zone A', day: 'Monday', time: '08:00 - 12:00', driver: 'John Driver' },
-  { id: '2', zone: 'Zone B', day: 'Tuesday', time: '08:00 - 12:00', driver: 'Jane Driver' },
-  { id: '3', zone: 'Zone C', day: 'Wednesday', time: '13:00 - 17:00', driver: 'Mike Driver' },
-];
-
-const alerts = [
-  { id: '1', type: 'warning', message: 'Smart bin SB-045 at 95% capacity', location: 'Main Street' },
-  { id: '2', type: 'error', message: 'Vehicle V-012 requires maintenance', location: 'Depot' },
-  { id: '3', type: 'info', message: 'Route optimization completed for Zone A', location: '' },
-];
-
-export function DashboardPage() {
+// ================= MAIN PAGE =================
+export default function DashboardPage() {
   const { user } = useAuth();
 
-  const renderRoleBasedContent = () => {
-    switch (user?.role) {
-      case 'super_admin':
-        return <SuperAdminDashboard />;
-      case 'municipality_admin':
-        return <MunicipalityAdminDashboard />;
-      case 'company_admin':
-        return <CompanyAdminDashboard />;
-      case 'driver':
-        return <DriverDashboard />;
-      case 'citizen':
-        return <CitizenDashboard />;
-      default:
-        return <SuperAdminDashboard />;
-    }
-  };
+  const role = user?.role;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {renderRoleBasedContent()}
+        {role === "super_admin" && <SuperAdminDashboard />}
+        {role === "municipality_admin" && <MunicipalityDashboard />}
+        {role === "company_admin" && <CompanyDashboard />}
+        {role === "driver" && <DriverDashboard />}
+        {(!role || role === "citizen") && <CitizenDashboard />}
       </div>
     </DashboardLayout>
   );
 }
 
+// ================= SUPER ADMIN =================
 function SuperAdminDashboard() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-secondary-900 dark:text-white">
-            Super Admin Dashboard
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400 mt-1">
-            Overview of system-wide operations and performance
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400">
-          <TrendingUp className="w-5 h-5" />
-          <span className="font-medium">+12.5% this month</span>
-        </div>
+      <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
+
+      <QuickAction
+        title="Track Truck"
+        icon={MapPin}
+        color="bg-secondary-500"
+      />
+
+      <AreaChartCard title="Waste Collection Trend" data={[]} />
+
+      <ActivityFeed />
+    </div>
+  );
+}
+
+// ================= MUNICIPALITY =================
+function MunicipalityDashboard() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Municipality Dashboard</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Wards" value="—" icon={MapPin} iconColor="bg-primary-500" />
+        <StatCard title="Reports" value="—" icon={FileText} iconColor="bg-warning-500" />
+        <StatCard title="Collections" value="—" icon={Truck} iconColor="bg-success-500" />
+        <StatCard title="Drivers" value="—" icon={Users} iconColor="bg-secondary-500" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard
-          title="Total Citizens"
-          value="12,847"
-          change={8.2}
-          icon={Users}
-          iconColor="bg-primary-500"
-          trend="up"
-        />
-        <StatCard
-          title="Active Drivers"
-          value="156"
-          change={-2.1}
-          icon={Truck}
-          iconColor="bg-secondary-500"
-          trend="down"
-        />
-        <StatCard
-          title="Vehicles Online"
-          value="42"
-          change={5}
-          icon={MapPin}
-          iconColor="bg-accent-500"
-          trend="up"
-        />
-        <StatCard
-          title="Revenue"
-          value="TZS 2.4M"
-          change={15.3}
-          icon={DollarSign}
-          iconColor="bg-success-500"
-          trend="up"
-        />
+      <ActivityFeed />
+    </div>
+  );
+}
+
+// ================= COMPANY =================
+function CompanyDashboard() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Company Dashboard</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Drivers" value="—" icon={Users} iconColor="bg-primary-500" />
+        <StatCard title="Vehicles" value="—" icon={Truck} iconColor="bg-secondary-500" />
+        <StatCard title="Routes" value="—" icon={MapPin} iconColor="bg-success-500" />
+        <StatCard title="Tasks" value="—" icon={FileText} iconColor="bg-accent-500" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <AreaChartCard title="Waste Collection Trend (tons)" data={wasteTrendData} />
+      <ActivityFeed />
+    </div>
+  );
+}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PieChartCard title="Waste Type Distribution" data={wasteTypeData} />
-            <BarChartCard title="Zone Performance (%)" data={zonePerformanceData} />
-          </div>
+// ================= DRIVER =================
+function DriverDashboard() {
+  const { user } = useAuth();
+
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ================= LOAD REPORTS + REALTIME =================
+  useEffect(() => {
+    if (!user) return;
+
+    loadReports();
+
+    const channel = supabase
+      .channel("driver-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "waste_reports",
+        },
+        () => {
+          loadReports();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // ================= LIVE GPS =================
+  useEffect(() => {
+    if (!user) return;
+
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported.");
+      return;
+    }
+
+    const sendLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          await updateTruckLocation(
+            user.id,
+            position.coords.latitude,
+            position.coords.longitude
+          );
+        },
+        (error) => {
+          console.error("GPS Error:", error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    };
+
+    // Send immediately
+    sendLocation();
+
+    // Send every 5 seconds
+    const interval = setInterval(sendLocation, 5000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
+// ================= LOAD ASSIGNED REPORTS =================
+async function loadReports() {
+  if (!user) return;
+
+  setLoading(true);
+
+  const { data, error } = await supabase
+    .from("waste_reports")
+    .select("*")
+    .eq("assigned_to", user.id)
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (error) {
+    console.error(error);
+  } else {
+    setReports(data ?? []);
+  }
+
+  setLoading(false);
+}
+
+// ================= UPDATE REPORT STATUS =================
+async function updateReportStatus(
+  reportId: string,
+  status: string
+) {
+  const { error } = await supabase
+    .from("waste_reports")
+    .update({
+      status,
+    })
+    .eq("id", reportId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadReports();
+}
+
+return (
+  <div className="space-y-6">
+
+    <div>
+      <h1 className="text-3xl font-bold">
+        Driver Dashboard
+      </h1>
+
+      <p className="text-gray-500">
+        Assigned Waste Collection Jobs
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <StatCard
+        title="Assigned Jobs"
+        value={reports.length}
+        icon={Truck}
+        iconColor="bg-blue-500"
+      />
+
+      <StatCard
+        title="Completed"
+        value={
+          reports.filter(
+            (r) => r.status === "resolved"
+          ).length
+        }
+        icon={FileText}
+        iconColor="bg-green-500"
+      />
+
+      <StatCard
+        title="Remaining"
+        value={
+          reports.filter(
+            (r) => r.status !== "resolved"
+          ).length
+        }
+        icon={MapPin}
+        iconColor="bg-orange-500"
+      />
+
+    </div>
+
+    {loading && (
+      <div className="bg-white rounded-xl p-6 shadow">
+        Loading assigned reports...
+      </div>
+    )}
+
+      {!loading && reports.length === 0 && (
+        <div className="bg-white rounded-xl p-10 shadow text-center text-gray-500">
+          No reports assigned to you.
         </div>
+      )}
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning-500" />
-                System Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-secondary-100 dark:divide-slate-700">
-                {alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="px-6 py-4 hover:bg-secondary-50 dark:hover:bg-slate-700/50"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-2 h-2 rounded-full mt-2 ${
-                          alert.type === 'error'
-                            ? 'bg-error-500'
-                            : alert.type === 'warning'
-                            ? 'bg-warning-500'
-                            : 'bg-primary-500'
-                        }`}
-                      />
-                      <div>
-                        <p className="text-sm text-secondary-900 dark:text-white">
-                          {alert.message}
-                        </p>
-                        {alert.location && (
-                          <p className="text-xs text-secondary-500 dark:text-secondary-400">
-                            {alert.location}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+      {!loading &&
+        reports.map((report) => (
+          <div
+            key={report.id}
+            className="bg-white rounded-xl shadow-lg p-5"
+          >
+
+            <div className="grid md:grid-cols-3 gap-5">
+
+              <div>
+
+                {report.photos &&
+                report.photos.length > 0 ? (
+                  <img
+                    src={report.photos[0]}
+                    alt="Waste"
+                    className="rounded-xl h-52 w-full object-cover"
+                  />
+                ) : (
+                  <div className="bg-gray-200 rounded-xl h-52 flex items-center justify-center">
+                    No Photo
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                )}
 
-          <ActivityFeed />
-        </div>
-      </div>
+              </div>
+
+              <div className="md:col-span-2 space-y-3">
+
+                <h2 className="text-xl font-bold capitalize">
+                  {report.report_type.replaceAll("_", " ")}
+                </h2>
+
+                <p>{report.description}</p>
+
+                <p>
+                  📍 {report.address}
+                </p>
+
+                <p>
+                  Status:
+                  <strong>
+                    {" "}
+                    {report.status.replaceAll("_", " ")}
+                  </strong>
+                </p>
+                  
+              <div className="flex gap-3 pt-4">
+
+  {report.status === "pending" && (
+    <button
+      onClick={() =>
+        updateReportStatus(
+          report.id,
+          "in_progress"
+        )
+      }
+      className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg"
+    >
+      Start Collection
+    </button>
+  )}
+
+  {report.status === "in_progress" && (
+    <button
+      onClick={() =>
+        updateReportStatus(
+          report.id,
+          "resolved"
+        )
+      }
+      className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+    >
+      Complete Job
+    </button>
+  )}
+
+  {report.status === "resolved" && (
+    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-lg">
+      ✓ Completed
+    </span>
+  )}
+
+</div> 
+
+                <p className="text-sm text-gray-500">
+                  {new Date(
+                    report.created_at
+                  ).toLocaleString()}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+
+    </div>
+  );
+}
+
+// ================= CITIZEN =================
+function CitizenDashboard() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Welcome back</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <QuickAction
-          title="Manage Users"
-          description="Add, edit, or remove users"
-          icon={Users}
-          color="bg-primary-500"
-        />
-        <QuickAction
-          title="Add Municipality"
-          description="Register new municipality"
-          icon={MapPin}
-          color="bg-secondary-500"
-        />
-        <QuickAction
-          title="View Reports"
-          description="Access system reports"
-          icon={FileText}
-          color="bg-accent-500"
-        />
-        <QuickAction
-          title="Recycling Data"
-          description="View recycling metrics"
+        <StatCard
+          title="Eco Score"
+          value="—"
           icon={Recycle}
-          color="bg-success-500"
+          iconColor="bg-success-500"
+        />
+
+        <StatCard
+          title="Points"
+          value="—"
+          icon={TrendingUp}
+          iconColor="bg-primary-500"
+        />
+
+        <StatCard
+          title="Next Collection"
+          value="—"
+          icon={Calendar}
+          iconColor="bg-secondary-500"
+        />
+
+        <StatCard
+          title="Reports"
+          value="—"
+          icon={FileText}
+          iconColor="bg-warning-500"
         />
       </div>
-    </div>
-  );
-}
-
-function MunicipalityAdminDashboard() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-secondary-900 dark:text-white">
-            Municipality Dashboard
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400 mt-1">
-            Manage wards, schedules, and collection operations
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Total Wards" value="24" icon={MapPin} iconColor="bg-primary-500" />
-        <StatCard title="Pending Reports" value="18" icon={FileText} iconColor="bg-warning-500" />
-        <StatCard title="Collections Today" value="45" icon={Truck} iconColor="bg-success-500" />
-        <StatCard title="Active Drivers" value="32" icon={Users} iconColor="bg-secondary-500" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Upcoming Schedules
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-secondary-100 dark:divide-slate-700">
-              {upcomingSchedules.map((schedule) => (
-                <div
-                  key={schedule.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-secondary-50 dark:hover:bg-slate-700/50"
-                >
-                  <div>
-                    <p className="font-medium text-secondary-900 dark:text-white">
-                      {schedule.zone}
-                    </p>
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                      {schedule.day} &middot; {schedule.time}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                      {schedule.driver}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <BarChartCard title="Weekly Collection Performance" data={zonePerformanceData} />
-      </div>
 
       <ActivityFeed />
-    </div>
-  );
-}
-
-function CompanyAdminDashboard() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-secondary-900 dark:text-white">
-            Company Dashboard
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400 mt-1">
-            Manage drivers, vehicles, and routes
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Total Drivers" value="48" icon={Users} iconColor="bg-primary-500" />
-        <StatCard title="Vehicles" value="25" icon={Truck} iconColor="bg-secondary-500" />
-        <StatCard title="Active Routes" value="12" icon={MapPin} iconColor="bg-success-500" />
-        <StatCard title="Completed Today" value="8" icon={FileText} iconColor="bg-accent-500" />
-      </div>
-
-      <AreaChartCard title="Collections This Week" data={wasteTrendData} />
-
-      <ActivityFeed />
-    </div>
-  );
-}
-
-function DriverDashboard() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-secondary-900 dark:text-white">
-            Driver Dashboard
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400 mt-1">
-            View your assigned routes and tasks for today
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
-        <StatCard title="Today's Stops" value="15" icon={MapPin} iconColor="bg-primary-500" />
-        <StatCard title="Completed" value="8" icon={FileText} iconColor="bg-success-500" />
-        <StatCard title="Remaining" value="7" icon={Truck} iconColor="bg-warning-500" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Route</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20">
-            <div>
-              <p className="font-semibold text-primary-700 dark:text-primary-300">Route #12</p>
-              <p className="text-sm text-primary-600 dark:text-primary-400">Zone A - Main Street Corridor</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-primary-700 dark:text-primary-300">53%</p>
-              <p className="text-xs text-primary-600 dark:text-primary-400">Completed</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            Route Stops
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-secondary-100 dark:divide-slate-700">
-            {[
-              { id: '1', address: '123 Main Street', status: 'completed' },
-              { id: '2', address: '456 Oak Avenue', status: 'completed' },
-              { id: '3', address: '789 Pine Road', status: 'in_progress' },
-              { id: '4', address: '101 Elm Street', status: 'pending' },
-              { id: '5', address: '202 Cedar Lane', status: 'pending' },
-            ].map((stop, index) => (
-              <div
-                key={stop.id}
-                className="flex items-center gap-4 px-6 py-4 hover:bg-secondary-50 dark:hover:bg-slate-700/50"
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    stop.status === 'completed'
-                      ? 'bg-success-500 text-white'
-                      : stop.status === 'in_progress'
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-secondary-200 dark:bg-slate-700 text-secondary-600 dark:text-secondary-400'
-                  }`}
-                >
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-secondary-900 dark:text-white">
-                    {stop.address}
-                  </p>
-                  <p className="text-xs text-secondary-500 dark:text-secondary-400 capitalize">
-                    {stop.status.replace('_', ' ')}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function CitizenDashboard() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-secondary-900 dark:text-white">
-            Welcome back!
-          </h1>
-          <p className="text-secondary-600 dark:text-secondary-400 mt-1">
-            Track collections, report issues, and manage your account
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Eco Score" value="850" icon={Recycle} iconColor="bg-success-500" />
-        <StatCard title="Reward Points" value="1,250" icon={TrendingUp} iconColor="bg-primary-500" />
-        <StatCard title="Next Collection" value="Tomorrow" icon={Calendar} iconColor="bg-secondary-500" />
-        <StatCard title="Active Reports" value="2" icon={FileText} iconColor="bg-warning-500" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Collection Schedule</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-secondary-100 dark:divide-slate-700">
-              {[
-                { day: 'Monday', waste: 'Household Waste', time: '08:00 - 12:00' },
-                { day: 'Wednesday', waste: 'Organic Waste', time: '08:00 - 12:00' },
-                { day: 'Friday', waste: 'Recyclables', time: '13:00 - 17:00' },
-              ].map((schedule, index) => (
-                <div key={index} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-secondary-900 dark:text-white">{schedule.day}</p>
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">{schedule.time}</p>
-                  </div>
-                  <p className="text-sm text-secondary-500 dark:text-secondary-400 mt-1">
-                    {schedule.waste}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <ActivityFeed />
-      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickAction
           title="Report Issue"
-          description="Report illegal dumping, overflow"
+          description="Submit waste complaints"
           icon={AlertTriangle}
           color="bg-warning-500"
+          onClick={() => navigate("/report-issue")}
         />
+
         <QuickAction
           title="Request Pickup"
-          description="Schedule special collection"
+          description="Request waste pickup"
           icon={Truck}
           color="bg-primary-500"
+          onClick={() => navigate("/pickup-request")}
         />
-        <QuickAction
-          title="Track Truck"
-          description="See live vehicle location"
-          icon={MapPin}
-          color="bg-secondary-500"
-        />
-        <QuickAction
-          title="Pay Fees"
-          description="Make a payment"
-          icon={DollarSign}
-          color="bg-success-500"
-        />
+
+       <QuickAction
+         title="Track Truck"
+         description="Track collection vehicle"
+         icon={MapPin}
+         color="bg-secondary-500"
+         onClick={() => navigate("/track-truck")}
+       />
+
+       <QuickAction
+         title="Pay Fees"
+         description="Pay waste collection fees"
+         icon={DollarSign}
+         color="bg-success-500"
+         onClick={() => navigate("/payment")}
+       />
+        
       </div>
     </div>
   );
 }
-export default DashboardPage;

@@ -1,37 +1,198 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Suspense, lazy } from "react";
 
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const LoginPage = lazy(() => import('./components/auth/LoginPage'));
-const RegisterPage = lazy(() => import('./components/auth/RegisterPage'));
+import { PaymentListener } from "./components/PaymentListener";
+import { useAuth } from "./hooks/useAuth";
 
-function PageLoader() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-50 dark:bg-slate-900">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-primary-200 dark:border-slate-700 rounded-full" />
-          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-        <p className="text-secondary-600 dark:text-secondary-400 font-medium">Loading...</p>
+/* ================= LAZY PAGES ================= */
+
+const ComplaintsPage = lazy(
+  () => import("./pages/ComplaintsPage")
+);
+
+const SmartCollectionPage = lazy(
+  () => import("./pages/SmartCollectionPage")
+);
+
+const TrackingPage = lazy(
+  () => import("./pages/TrackingPage")
+);
+
+const GpsPage = lazy(
+  () => import("./pages/GpsPage")
+);
+
+const PaymentsFeaturePage = lazy(
+  () => import("./pages/PaymentsFeaturePage")
+);
+
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const AdminDashboardPage = lazy(
+  () => import("./pages/AdminDashboardPage")
+);
+
+const LoginPage = lazy(() => import("./components/auth/LoginPage"));
+const RegisterPage = lazy(() => import("./components/auth/RegisterPage"));
+
+const PaymentPage = lazy(() => import("./pages/PaymentPage"));
+const PaymentHistoryPage = lazy(
+  () => import("./pages/PaymentHistoryPage")
+);
+
+const AdminFinancePage = lazy(
+  () => import("./pages/AdminFinancePage")
+);
+
+const ReportIssue = lazy(() => import("./pages/ReportIssue"));
+const TrackTruckPage = lazy(() => import("./pages/TrackTruckPage"));
+const PickupRequestPage = lazy(
+  () => import("./pages/PickupRequestPage")
+);
+
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+
+/* ================= PROTECTED ROUTE ================= */
+
+function ProtectedRoute() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
 }
+
+/* ================= APP ================= */
 
 function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/dashboard/*" element={<DashboardPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+    <>
+      <PaymentListener />
+
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            Loading...
+          </div>
+        }
+      >
+        <Routes>
+
+          {/* PUBLIC */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          <Route
+            path="/features/smart-collection"
+            element={<SmartCollectionPage />}
+          />
+
+          <Route
+            path="/features/tracking"
+            element={<TrackingPage />}
+          />
+
+          <Route
+            path="/features/gps"
+            element={<GpsPage />}
+          />
+
+          <Route
+            path="/features/payments"
+            element={<PaymentsFeaturePage />}
+          /> 
+          
+          {/* PROTECTED */}
+          <Route element={<ProtectedRoute />}>
+
+            {/* DASHBOARDS */}
+            <Route
+              path="/dashboard"
+              element={<DashboardPage />}
+            />
+            
+            <Route path="/analytics" element={<div>Analytics Page</div>} />
+            <Route path="/complaints" element={<ComplaintsPage />} />
+            <Route path="/recycling" element={<div>Recycling Page</div>} />
+            <Route path="/schedules" element={<div>Schedules Page</div>} />          
+
+            <Route
+              path="/dashboard/*"
+              element={<DashboardPage />}
+            />
+
+            <Route
+              path="/admin/dashboard"
+              element={<AdminDashboardPage />}
+            />
+
+            {/* PAYMENTS */}
+            <Route
+              path="/payment"
+              element={<PaymentPage />}
+            />
+
+            <Route
+              path="/payments/history"
+              element={<PaymentHistoryPage />}
+            />
+
+            <Route
+              path="/admin/finance"
+              element={<AdminFinancePage />}
+            />
+
+            {/* WASTE */}
+            <Route
+              path="/report-issue"
+              element={<ReportIssue />}
+            />
+
+            <Route
+              path="/track-truck"
+              element={<TrackTruckPage />}
+            />
+
+            <Route
+              path="/pickup-request"
+              element={<PickupRequestPage />}
+            />
+
+            {/* USER */}
+            <Route
+              path="/profile"
+              element={<ProfilePage />}
+            />
+
+            <Route
+              path="/settings"
+              element={<SettingsPage />}
+            />
+
+          </Route>
+
+          {/* FALLBACK */}
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
+          />
+
+        </Routes>
+      </Suspense>
+    </>
   );
 }
 

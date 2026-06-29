@@ -1,3 +1,4 @@
+import { useNotificationsStore } from "../../store";
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,11 +32,7 @@ export function Header() {
     navigate('/login');
   };
 
-  const notifications = [
-    { id: 1, title: 'New report submitted', message: 'Illegal dumping at Zone A', time: '2m ago', read: false },
-    { id: 2, title: 'Payment received', message: 'TZS 50,000 from citizen', time: '15m ago', read: false },
-    { id: 3, title: 'Route completed', message: 'Driver John finished Route 5', time: '1h ago', read: true },
-  ];
+  const { notifications, unreadCount } = useNotificationsStore();
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-secondary-100 dark:border-slate-700">
@@ -75,7 +72,12 @@ export function Header() {
               className="relative p-2.5 rounded-xl text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-error-500 rounded-full border-2 border-white dark:border-slate-900" />
+
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px]">
+                  {unreadCount}
+                </span>
+              )}
             </button>
 
             <AnimatePresence>
