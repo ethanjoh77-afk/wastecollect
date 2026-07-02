@@ -63,6 +63,15 @@ export function Sidebar() {
     (item) => !item.roles || item.roles.includes(user?.role as UserRole)
   );
 
+  // Funga sidebar KWA SIMU PEKEE (screen < 1024px). Kwenye kompyuta, sidebar
+  // inabaki wazi daima kwa sababu inaonyeshwa kupitia CSS (lg:relative lg:translate-x-0),
+  // hivyo haipaswi kuathiriwa na hali ya sidebarOpen kutoka Framer Motion.
+  const handleNavClick = () => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
     <>
       {sidebarOpen && (
@@ -76,7 +85,7 @@ export function Sidebar() {
         animate={{ x: sidebarOpen ? 0 : -280, width: 280 }}
         className={cn(
           'fixed top-0 left-0 h-full bg-white dark:bg-slate-900 border-r border-secondary-100 dark:border-slate-700 z-50',
-          'flex flex-col shadow-xl lg:shadow-none lg:relative lg:translate-x-0'
+          'flex flex-col shadow-xl lg:shadow-none lg:!translate-x-0 lg:relative'
         )}
       >
         {/* Logo */}
@@ -109,7 +118,7 @@ export function Sidebar() {
                 <li key={item.path}>
                   <NavLink
                     to={item.path}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={handleNavClick}
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
                       isActive
