@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useLandingStats } from "../../hooks/useLandingStats";
+import { useAppStats } from "../../hooks/useAppStats";
 
 function formatNumber(n: number) {
   return n.toLocaleString("en-US") + "+";
@@ -7,13 +7,13 @@ function formatNumber(n: number) {
 
 export default function Stats() {
   const { t } = useTranslation();
-  const { stats, loading } = useLandingStats();
+  const { stats, loading } = useAppStats();
 
   const items = [
-    { label: t("stat_registered_users"), value: stats?.registeredUsers ?? 0 },
-    { label: t("stat_reports_resolved"), value: stats?.reportsResolved ?? 0 },
-    { label: t("stat_active_drivers"), value: stats?.activeDrivers ?? 0 },
-    { label: t("stat_municipalities"), value: stats?.municipalities ?? 0 },
+    { label: t("stat_registered_users"), value: stats.citizens },
+    { label: t("stat_reports_resolved"), value: stats.reportsResolved },
+    { label: t("stat_active_drivers"), value: stats.drivers },
+    { label: t("stat_municipalities"), value: stats.municipalities },
   ];
 
   return (

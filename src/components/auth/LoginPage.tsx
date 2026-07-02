@@ -5,12 +5,14 @@ import { Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '../common';
 import { useAuth } from '../../hooks/useAuth';
+import { useAppStats } from '../../hooks/useAppStats';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { login, isLoading } = useAuth();
+  const { stats, loading: statsLoading } = useAppStats();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -62,9 +64,9 @@ export function LoginPage() {
 
           <div className="mt-12 grid grid-cols-3 gap-4">
             {[
-              { label: t('login_stat_citizens'), value: '10K+' },
-              { label: t('login_stat_vehicles'), value: '500+' },
-              { label: t('login_stat_collections'), value: '50K+' },
+              { label: t('login_stat_citizens'), value: stats.citizens },
+              { label: t('login_stat_vehicles'), value: stats.vehicles },
+              { label: t('login_stat_collections'), value: stats.reportsResolved },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -73,7 +75,9 @@ export function LoginPage() {
                 transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
                 className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm"
               >
-                <div className="text-3xl font-bold text-white">{stat.value}</div>
+                <div className="text-3xl font-bold text-white">
+                  {statsLoading ? '...' : `${stat.value.toLocaleString()}+`}
+                </div>
                 <div className="text-sm text-white/70">{stat.label}</div>
               </motion.div>
             ))}
