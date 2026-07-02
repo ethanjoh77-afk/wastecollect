@@ -1,51 +1,52 @@
-export const stats = [
-  { label: "Registered Users", value: "15,000+" },
-  { label: "Waste Collected", value: "2,500,000 kg" },
-  { label: "Active Trucks", value: "500+" },
-  { label: "Cities Served", value: "50+" },
-];
+import type { TFunction } from "i18next";
 
-export const features = [
-  {
-    title: "Smart Waste Collection",
-    desc: "AI-powered route optimization ensures efficient collection with minimal environmental impact.",
-  },
-  {
-    title: "Real-Time Tracking",
-    desc: "Track collection vehicles live on the map with accurate ETA predictions.",
-  },
-  {
-    title: "GPS Monitoring",
-    desc: "Monitor fleet location, speed, and routes with advanced GPS technology.",
-  },
-  {
-    title: "Digital Payments",
-    desc: "Pay waste fees via M-Pesa, Airtel Money, cards, or bank transfer instantly.",
-  },
-];
+export function getFeatures(t: TFunction) {
+  return [
+    {
+      title: t("feature_smart_collection_title"),
+      desc: t("feature_smart_collection_desc"),
+    },
+    {
+      title: t("feature_realtime_tracking_title"),
+      desc: t("feature_realtime_tracking_desc"),
+    },
+    {
+      title: t("feature_gps_monitoring_title"),
+      desc: t("feature_gps_monitoring_desc"),
+    },
+    {
+      title: t("feature_digital_payments_title"),
+      desc: t("feature_digital_payments_desc"),
+    },
+  ];
+}
 
-export const steps = [
-  { step: "01", title: "Register", desc: "Create your free account in minutes." },
-  { step: "02", title: "Schedule Pickup", desc: "Choose your preferred time." },
-  { step: "03", title: "Collection", desc: "Our team collects waste." },
-  { step: "04", title: "Recycling", desc: "Waste is processed responsibly." },
-  { step: "05", title: "Confirmation", desc: "Get instant confirmation." },
-];
+export function getSteps(t: TFunction) {
+  return [
+    { step: "01", title: t("step_1_title"), desc: t("step_1_desc") },
+    { step: "02", title: t("step_2_title"), desc: t("step_2_desc") },
+    { step: "03", title: t("step_3_title"), desc: t("step_3_desc") },
+    { step: "04", title: t("step_4_title"), desc: t("step_4_desc") },
+    { step: "05", title: t("step_5_title"), desc: t("step_5_desc") },
+  ];
+}
 
-export const testimonials = [
-  {
-    name: "Grace Mwangi",
-    role: "City Manager",
-    text: "WasteCollect increased efficiency by 40% in 6 months.",
-  },
-  {
-    name: "John Kikwete",
-    role: "Operations Director",
-    text: "Reduced fuel costs and improved service delivery.",
-  },
-  {
-    name: "Fatima Hassan",
-    role: "Citizen",
-    text: "I can track trucks and report issues easily.",
-  },
-];
+export function getTestimonials(t: TFunction) {
+  return [
+    {
+      name: t("testimonial_1_name"),
+      role: t("testimonial_1_role"),
+      text: t("testimonial_1_text"),
+    },
+    {
+      name: t("testimonial_2_name"),
+      role: t("testimonial_2_role"),
+      text: t("testimonial_2_text"),
+    },
+    {
+      name: t("testimonial_3_name"),
+      role: t("testimonial_3_role"),
+      text: t("testimonial_3_text"),
+    },
+  ];
+}
