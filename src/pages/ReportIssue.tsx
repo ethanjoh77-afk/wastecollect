@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { createActivity } from "../lib/activityService";
 import { uploadReportPhoto } from "../lib/storageService";
+import { Input } from "../components/common/Input";
+import { Select } from "../components/common/Select";
+import { Textarea } from "../components/common/Textarea";
 
 export default function ReportIssue() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [reportType, setReportType] = useState("illegal_dumping");
   const [description, setDescription] = useState("");
@@ -22,7 +27,7 @@ export default function ReportIssue() {
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
+      alert(t('report_geo_not_supported'));
       return;
     }
 
@@ -31,11 +36,11 @@ export default function ReportIssue() {
         setLocationLat(position.coords.latitude);
         setLocationLng(position.coords.longitude);
 
-        alert("Location captured successfully.");
+        alert(t('report_location_captured'));
       },
       (error) => {
-        console.error(error);
-        alert("Unable to get your current location.");
+        console.error("Geolocation error:", error.message);
+        alert(t('report_location_failed'));
       },
       {
         enableHighAccuracy: true,
@@ -49,12 +54,12 @@ export default function ReportIssue() {
     e.preventDefault();
 
     if (!user) {
-      alert("Please login first.");
+      alert(t('report_login_required'));
       return;
     }
 
     if (!description.trim() || !address.trim()) {
-      alert("Please fill all required fields.");
+      alert(t('report_fill_required'));
       return;
     }
 
@@ -67,7 +72,7 @@ export default function ReportIssue() {
         photoUrl = await uploadReportPhoto(photo);
       }
 
-      const { data: report, error } = await supabase
+      const { error } = await supabase
         .from("waste_reports")
         .insert({
           citizen_id: user.id,
@@ -101,12 +106,10 @@ export default function ReportIssue() {
       setLocationLat(null);
       setLocationLng(null);
 
-      alert("Waste report submitted successfully.");
-
-      console.log(report);
+      alert(t('report_success'));
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Failed to submit report.");
+      console.error("Report submission failed:", err.message);
+      alert(err.message || t('report_failed'));
     } finally {
       setLoading(false);
     }
@@ -116,104 +119,81 @@ export default function ReportIssue() {
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex items-center gap-2 mb-6">
         <AlertTriangle className="text-red-500" size={28} />
-        <h1 className="text-2xl font-bold">
-          Report Waste Issue
+        <h1 className="text-2xl font-bold text-secondary-900 dark:text-white">
+          {t('report_title')}
         </h1>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl shadow p-6 space-y-5"
+        className="bg-white dark:bg-slate-900 rounded-xl shadow p-6 space-y-5"
       >
         {/* Report Type */}
-
-        <div>
-          <label className="block font-medium mb-2">
-            Report Type
-          </label>
-
-          <select
-            className="w-full border rounded-lg p-3"
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-          >
-            <option value="illegal_dumping">Illegal Dumping</option>
-            <option value="overflowing_bin">Overflowing Bin</option>
-            <option value="missed_collection">Missed Collection</option>
-            <option value="dirty_site">Dirty Site</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
+        <Select
+          label={t('report_type_label')}
+          value={reportType}
+          onChange={(e) => setReportType(e.target.value)}
+          options={[
+            { value: "illegal_dumping", label: t('report_type_illegal_dumping') },
+            { value: "overflowing_bin", label: t('report_type_overflowing_bin') },
+            { value: "missed_collection", label: t('report_type_missed_collection') },
+            { value: "dirty_site", label: t('report_type_dirty_site') },
+            { value: "other", label: t('report_type_other') },
+          ]}
+        />
 
         {/* Description */}
-
-        <div>
-          <label className="block font-medium mb-2">
-            Description
-          </label>
-
-          <textarea
-            rows={5}
-            className="w-full border rounded-lg p-3"
-            placeholder="Describe the waste issue..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
+        <Textarea
+          label={t('report_description_label')}
+          rows={5}
+          placeholder={t('report_description_placeholder')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
 
         {/* Address */}
-
-        <div>
-          <label className="block font-medium mb-2">
-            Address
-          </label>
-
-          <input
-            type="text"
-            className="w-full border rounded-lg p-3"
-            placeholder="Enter address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label={t('report_address_label')}
+          type="text"
+          placeholder={t('report_address_placeholder')}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          required
+        />
 
         {/* GPS */}
-
         <div>
           <button
             type="button"
             onClick={getCurrentLocation}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
           >
-            📍 Get My Current Location
+            📍 {t('report_get_location')}
           </button>
 
           {locationLat && locationLng && (
-            <div className="mt-3 rounded-lg bg-green-50 border border-green-200 p-3">
+            <div className="mt-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-3 text-secondary-900 dark:text-secondary-100">
               <p>
-                <strong>Latitude:</strong> {locationLat}
+                <strong>{t('report_latitude')}:</strong> {locationLat}
               </p>
-
               <p>
-                <strong>Longitude:</strong> {locationLng}
+                <strong>{t('report_longitude')}:</strong> {locationLng}
               </p>
             </div>
           )}
         </div>
 
         {/* Photo */}
-
         <div>
-          <label className="block font-medium mb-2">
-            Upload Waste Photo
+          <label className="block font-medium mb-2 text-secondary-700 dark:text-secondary-300">
+            {t('report_upload_photo')}
           </label>
 
           <input
             type="file"
             accept="image/*"
-            className="w-full border rounded-lg p-3"
+            className="w-full border border-secondary-200 dark:border-slate-700 rounded-lg p-3 bg-white dark:bg-slate-800 text-secondary-900 dark:text-secondary-100 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary-50 file:text-primary-700 dark:file:bg-slate-700 dark:file:text-secondary-100"
             onChange={(e) => {
               if (e.target.files?.length) {
                 setPhoto(e.target.files[0]);
@@ -223,27 +203,26 @@ export default function ReportIssue() {
 
           {photo && (
             <div className="mt-4">
-              <p className="text-green-600 text-sm mb-3">
-                Selected Photo: <strong>{photo.name}</strong>
+              <p className="text-green-600 dark:text-green-400 text-sm mb-3">
+                {t('report_selected_photo')}: <strong>{photo.name}</strong>
               </p>
 
               <img
                 src={URL.createObjectURL(photo)}
                 alt="Preview"
-                className="w-full h-64 object-cover rounded-lg border"
+                className="w-full h-64 object-cover rounded-lg border border-secondary-200 dark:border-slate-700"
               />
             </div>
           )}
         </div>
 
         {/* Submit */}
-
         <button
           type="submit"
           disabled={loading}
           className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg disabled:opacity-50"
         >
-          {loading ? "Submitting..." : "Submit Report"}
+          {loading ? t('report_submitting') : t('report_submit_btn')}
         </button>
       </form>
     </div>

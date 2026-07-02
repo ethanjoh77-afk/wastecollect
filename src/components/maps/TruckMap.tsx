@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 
 import { supabase } from "../../lib/supabase";
 import { truckIcon } from "./truckIcon";
+import { debounce } from "../../lib/debounce";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -37,29 +38,6 @@ type TruckLocation = {
 export default function TruckMap() {
   const [trucks, setTrucks] = useState<TruckLocation[]>([]);
 
-  useEffect(() => {
-    loadLocations();
-
-    const channel = supabase
-      .channel("truck-live")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "truck_locations",
-        },
-        () => {
-          loadLocations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   async function loadLocations() {
     const { data, error } = await supabase
       .from("truck_locations")
@@ -79,6 +57,32 @@ export default function TruckMap() {
     setTrucks(data ?? []);
   }
 
+  // debounce inaundwa mara moja tu, si kwenye kila render
+  const debouncedLoad = useRef(debounce(loadLocations, 1000)).current;
+
+  useEffect(() => {
+    loadLocations();
+
+    const channel = supabase
+      .channel("truck-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "truck_locations",
+        },
+        () => {
+          debouncedLoad();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <MapContainer
       center={[-6.7924, 39.2083]}
@@ -97,14 +101,10 @@ export default function TruckMap() {
       {trucks.map((truck) => (
         <Marker
           key={truck.driver_id}
-          position={[
-            truck.latitude,
-            truck.longitude,
-          ]}
+          position={[truck.latitude, truck.longitude]}
           icon={truckIcon}
         >
           <Popup>
-
             <h3 className="font-bold text-lg">
               {truck.users
                 ? `${truck.users.first_name} ${truck.users.last_name}`
@@ -120,11 +120,8 @@ export default function TruckMap() {
             <p className="text-xs text-gray-500 mt-2">
               Last Update
               <br />
-              {new Date(
-                truck.updated_at
-              ).toLocaleString()}
+              {new Date(truck.updated_at).toLocaleString()}
             </p>
-
           </Popup>
         </Marker>
       ))}

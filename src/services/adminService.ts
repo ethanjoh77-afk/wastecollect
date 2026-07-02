@@ -11,22 +11,19 @@ export async function getAdminStats() {
     supabase
       .from("users")
       .select("*", { count: "exact", head: true }),
-
     supabase
       .from("waste_reports")
       .select("*", { count: "exact", head: true }),
-
     supabase
       .from("vehicles")
       .select("*", { count: "exact", head: true }),
-
     supabase
       .from("activities")
       .select("*", { count: "exact", head: true }),
-
     supabase
       .from("payments")
-      .select("amount"),
+      .select("amount")
+      .eq("status", "completed"),
   ]);
 
   const revenue =

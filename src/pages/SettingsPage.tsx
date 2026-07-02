@@ -6,7 +6,7 @@ type Theme = "light" | "dark";
 type Language = "en" | "sw";
 
 export default function SettingsPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +41,12 @@ export default function SettingsPage() {
 
       if (data) {
         setTheme(data.theme || "light");
-        setLanguage(data.language || "sw");
+        setLanguage(data.language || (i18n.language as Language) || "sw");
         setAccent(data.accent || "blue");
+      } else {
+        // Hakuna settings zilizohifadhiwa bado — tumia lugha ya sasa ya i18n
+        // (iliyowekwa na LanguageSwitcher/localStorage), si kuandika juu yake.
+        setLanguage((i18n.language as Language) || "sw");
       }
 
       setLoading(false);
@@ -62,8 +66,10 @@ export default function SettingsPage() {
 
   // ================= APPLY LANGUAGE =================
   useEffect(() => {
-    i18n.changeLanguage(language);
-  }, [language, i18n]);
+    if (!loading) {
+      i18n.changeLanguage(language);
+    }
+  }, [language, i18n, loading]);
 
   // ================= SAVE TO DATABASE =================
   const handleSave = async () => {
@@ -85,36 +91,36 @@ export default function SettingsPage() {
       );
 
     if (!error) {
-      alert("Settings saved successfully");
+      alert(t('settings_saved'));
     } else {
-      console.error("Save error:", error);
-      alert("Failed to save settings");
+      console.error("Settings save failed:", error.message);
+      alert(t('settings_save_failed'));
     }
   };
 
   // ================= LOADING UI =================
   if (loading) {
-    return <div className="p-6">Loading settings...</div>;
+    return <div className="p-6">{t('settings_loading')}</div>;
   }
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
 
       <h1 className="text-2xl font-semibold">
-        Settings
+        {t('settings_title')}
       </h1>
 
       {/* THEME */}
       <div className="p-5 border rounded-xl">
-        <h2>Theme</h2>
+        <h2>{t('settings_theme')}</h2>
 
-        <button onClick={() => setTheme("light")}>Light</button>
-        <button onClick={() => setTheme("dark")}>Dark</button>
+        <button onClick={() => setTheme("light")}>{t('settings_theme_light')}</button>
+        <button onClick={() => setTheme("dark")}>{t('settings_theme_dark')}</button>
       </div>
 
       {/* LANGUAGE */}
       <div className="p-5 border rounded-xl">
-        <h2>Language</h2>
+        <h2>{t('settings_language')}</h2>
 
         <select
           value={language}
@@ -127,15 +133,15 @@ export default function SettingsPage() {
 
       {/* ACCENT */}
       <div className="p-5 border rounded-xl">
-        <h2>Accent</h2>
+        <h2>{t('settings_accent')}</h2>
 
         <select
           value={accent}
           onChange={(e) => setAccent(e.target.value)}
         >
-          <option value="blue">Blue</option>
-          <option value="green">Green</option>
-          <option value="red">Red</option>
+          <option value="blue">{t('settings_accent_blue')}</option>
+          <option value="green">{t('settings_accent_green')}</option>
+          <option value="red">{t('settings_accent_red')}</option>
         </select>
       </div>
 
@@ -144,7 +150,7 @@ export default function SettingsPage() {
         onClick={handleSave}
         className="w-full bg-green-600 text-white py-3 rounded"
       >
-        Save Settings
+        {t('settings_save_btn')}
       </button>
 
     </div>

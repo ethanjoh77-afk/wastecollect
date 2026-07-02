@@ -16,6 +16,7 @@ export default function PaymentHistoryPage() {
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -26,10 +27,11 @@ export default function PaymentHistoryPage() {
 
       try {
         setLoading(true);
+        setError(null);
         const data = await getUserPayments(user.id);
         setPayments(data || []);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        setError(err.message || "Imeshindwa kupata historia ya malipo.");
       } finally {
         setLoading(false);
       }
@@ -41,12 +43,8 @@ export default function PaymentHistoryPage() {
   const filteredPayments = useMemo(() => {
     return payments.filter((payment) => {
       const matchesSearch =
-        payment.receipt_number
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-        payment.payment_method
-          ?.toLowerCase()
-          .includes(search.toLowerCase());
+        payment.receipt_number?.toLowerCase().includes(search.toLowerCase()) ||
+        payment.payment_method?.toLowerCase().includes(search.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" || payment.status === statusFilter;
@@ -57,16 +55,12 @@ export default function PaymentHistoryPage() {
 
   return (
     <div className="space-y-6">
-
       <div>
         <h1 className="text-2xl font-bold">Payment History</h1>
-        <p className="text-gray-500">
-          View all your payment records
-        </p>
+        <p className="text-gray-500">View all your payment records</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
-
         <input
           type="text"
           placeholder="Search receipt or method..."
@@ -86,13 +80,12 @@ export default function PaymentHistoryPage() {
           <option value="failed">Failed</option>
           <option value="refunded">Refunded</option>
         </select>
-
       </div>
 
       {loading ? (
-        <div className="text-center py-10">
-          Loading payments...
-        </div>
+        <div className="text-center py-10">Loading payments...</div>
+      ) : error ? (
+        <div className="text-center py-10 text-red-600">{error}</div>
       ) : filteredPayments.length === 0 ? (
         <div className="text-center py-10 border rounded-xl">
           No payment records found.
@@ -100,48 +93,29 @@ export default function PaymentHistoryPage() {
       ) : (
         <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-xl shadow">
           <table className="w-full">
-
             <thead className="bg-gray-100 dark:bg-slate-700">
-
               <tr>
-
                 <th className="text-left p-4">Receipt</th>
-
                 <th className="text-left p-4">Amount</th>
-
                 <th className="text-left p-4">Method</th>
-
                 <th className="text-left p-4">Status</th>
-
                 <th className="text-left p-4">Date</th>
-
               </tr>
-
             </thead>
-
             <tbody>
-
               {filteredPayments.map((payment) => (
-
                 <tr
                   key={payment.id}
                   className="border-t hover:bg-gray-50 dark:hover:bg-slate-700"
                 >
-
-                  <td className="p-4 font-medium">
-                    {payment.receipt_number}
-                  </td>
-
+                  <td className="p-4 font-medium">{payment.receipt_number}</td>
                   <td className="p-4">
                     TZS {Number(payment.amount).toLocaleString()}
                   </td>
-
                   <td className="p-4 capitalize">
-                    {payment.payment_method.replace("_", " ")}
+                    {payment.payment_method?.replace("_", " ") ?? "—"}
                   </td>
-
                   <td className="p-4">
-
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold
                       ${
@@ -156,19 +130,13 @@ export default function PaymentHistoryPage() {
                     >
                       {payment.status}
                     </span>
-
                   </td>
-
                   <td className="p-4">
                     {new Date(payment.created_at).toLocaleString()}
                   </td>
-
                 </tr>
-
               ))}
-
             </tbody>
-
           </table>
         </div>
       )}

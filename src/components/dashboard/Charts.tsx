@@ -54,6 +54,30 @@ export function AreaChartCard({
   dataKey?: string;
   className?: string;
 }) {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title={title} className={className}>
+        <div className="h-[300px] flex flex-col items-center justify-center text-center text-secondary-400 dark:text-secondary-500">
+          <svg
+            className="w-12 h-12 mb-3 opacity-50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M3 3v18h18M7 14l4-4 4 4 4-6"
+            />
+          </svg>
+          <p className="text-sm font-medium">Bado hakuna data ya kutosha</p>
+          <p className="text-xs mt-1">Grafu itaonekana baada ya ripoti kuanza kuingia</p>
+        </div>
+      </ChartCard>
+    );
+  }
+
   return (
     <ChartCard title={title} className={className}>
       <ResponsiveContainer width="100%" height={300}>

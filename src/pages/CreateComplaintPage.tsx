@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 import { useComplaints } from "../hooks/useComplaints";
+import { Input } from "../components/common/Input";
+import { Select } from "../components/common/Select";
+import { Textarea } from "../components/common/Textarea";
 
 export default function CreateComplaintPage() {
   const { createComplaint } = useComplaints();
@@ -14,49 +18,35 @@ export default function CreateComplaintPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
+    e.preventDefault();
 
-  setLoading(true);
-  setError(null);
-  setSuccess(null);
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
 
-  try {
-    // 1. GET AUTH USER
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser();
+    try {
+      // 1. GET AUTH USER
+      const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (userError) throw userError;
+      if (userError) throw userError;
 
-    const userId = userData?.user?.id;
+      const userId = userData?.user?.id;
 
-    if (!userId) {
-      throw new Error("User not authenticated");
-    }
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
 
-    // 2. INSERT COMPLAINT
-    const { error } = await supabase.from("complaints").insert({
-      subject,
-      description,
-      complaint_type: complaintType,
-      priority,
-      status: "open",
-      citizen_id: userId,
-    });
+      // 2. INSERT COMPLAINT
+      const { error } = await supabase.from("complaints").insert({
+        subject,
+        description,
+        complaint_type: complaintType,
+        priority,
+        status: "open",
+        citizen_id: userId,
+      });
 
-    if (error) throw error;
-
-    setSuccess("Complaint created successfully");
-
-    setSubject("");
-    setDescription("");
-    setComplaintType("");
-    setPriority("");
-  } catch (err: any) {
-    setError(err.message || "Failed to create complaint");
-  } finally {
-    setLoading(false);
-  }
-}
+      if (error) throw error;
 
       setSuccess("Complaint created successfully");
 
@@ -65,7 +55,7 @@ export default function CreateComplaintPage() {
       setComplaintType("");
       setPriority("");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to create complaint");
     } finally {
       setLoading(false);
     }
@@ -73,58 +63,53 @@ export default function CreateComplaintPage() {
 
   return (
     <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">
+      <h1 className="text-2xl font-bold mb-4 text-secondary-900 dark:text-white">
         Create Complaint
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
-        <input
+        <Input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Subject"
-          className="border p-3 w-full"
           required
         />
 
-        <textarea
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description"
-          className="border p-3 w-full"
           required
         />
 
-        <input
+        <Input
           value={complaintType}
           onChange={(e) => setComplaintType(e.target.value)}
           placeholder="Complaint Type"
-          className="border p-3 w-full"
           required
         />
 
-        <select
+        <Select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          className="border p-3 w-full"
+          placeholder="Priority"
           required
-        >
-          <option value="">Priority</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
+          options={[
+            { value: "low", label: "Low" },
+            { value: "medium", label: "Medium" },
+            { value: "high", label: "High" },
+          ]}
+        />
 
-        {error && <p className="text-red-600">{error}</p>}
-        {success && <p className="text-green-600">{success}</p>}
+        {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
+        {success && <p className="text-green-600 dark:text-green-400">{success}</p>}
 
         <button
           disabled={loading}
-          className="bg-black text-white p-3 w-full"
+          className="bg-slate-900 dark:bg-primary-600 hover:bg-slate-800 dark:hover:bg-primary-700 text-white p-3 w-full rounded-lg"
         >
           {loading ? "Saving..." : "Submit"}
         </button>
-
       </form>
     </div>
   );

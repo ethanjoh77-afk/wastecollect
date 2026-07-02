@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from "react";
 import { updateTruckLocation } from "../lib/truckTrackingService";
-import { useEffect, useState } from "react";
+import { debounce } from "../lib/debounce";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Users,
   Truck,
@@ -22,13 +24,11 @@ import {
   ActivityFeed,
 } from "../components/dashboard";
 
-import { Card, CardHeader, CardTitle, CardContent } from "../components/common";
 import { useAuth } from "../hooks/useAuth";
 
 // ================= MAIN PAGE =================
 export default function DashboardPage() {
   const { user } = useAuth();
-
   const role = user?.role;
 
   return (
@@ -46,17 +46,19 @@ export default function DashboardPage() {
 
 // ================= SUPER ADMIN =================
 function SuperAdminDashboard() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold">{t('super_admin_dashboard')}</h1>
 
       <QuickAction
-        title="Track Truck"
+        title={t('track_truck')}
         icon={MapPin}
         color="bg-secondary-500"
       />
 
-      <AreaChartCard title="Waste Collection Trend" data={[]} />
+      <AreaChartCard title={t('waste_collection_trend')} data={[]} />
 
       <ActivityFeed />
     </div>
@@ -65,15 +67,17 @@ function SuperAdminDashboard() {
 
 // ================= MUNICIPALITY =================
 function MunicipalityDashboard() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Municipality Dashboard</h1>
+      <h1 className="text-2xl font-bold">{t('municipality_dashboard')}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Wards" value="—" icon={MapPin} iconColor="bg-primary-500" />
-        <StatCard title="Reports" value="—" icon={FileText} iconColor="bg-warning-500" />
-        <StatCard title="Collections" value="—" icon={Truck} iconColor="bg-success-500" />
-        <StatCard title="Drivers" value="—" icon={Users} iconColor="bg-secondary-500" />
+        <StatCard title={t('wards')} value="—" icon={MapPin} iconColor="bg-primary-500" />
+        <StatCard title={t('reports')} value="—" icon={FileText} iconColor="bg-warning-500" />
+        <StatCard title={t('collections')} value="—" icon={Truck} iconColor="bg-success-500" />
+        <StatCard title={t('drivers')} value="—" icon={Users} iconColor="bg-secondary-500" />
       </div>
 
       <ActivityFeed />
@@ -83,15 +87,17 @@ function MunicipalityDashboard() {
 
 // ================= COMPANY =================
 function CompanyDashboard() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Company Dashboard</h1>
+      <h1 className="text-2xl font-bold">{t('company_dashboard')}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Drivers" value="—" icon={Users} iconColor="bg-primary-500" />
-        <StatCard title="Vehicles" value="—" icon={Truck} iconColor="bg-secondary-500" />
-        <StatCard title="Routes" value="—" icon={MapPin} iconColor="bg-success-500" />
-        <StatCard title="Tasks" value="—" icon={FileText} iconColor="bg-accent-500" />
+        <StatCard title={t('drivers')} value="—" icon={Users} iconColor="bg-primary-500" />
+        <StatCard title={t('vehicles')} value="—" icon={Truck} iconColor="bg-secondary-500" />
+        <StatCard title={t('routes')} value="—" icon={MapPin} iconColor="bg-success-500" />
+        <StatCard title={t('tasks')} value="—" icon={FileText} iconColor="bg-accent-500" />
       </div>
 
       <ActivityFeed />
@@ -102,9 +108,12 @@ function CompanyDashboard() {
 // ================= DRIVER =================
 function DriverDashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const debouncedLoadReports = useRef(debounce(loadReports, 1000)).current;
 
   // ================= LOAD REPORTS + REALTIME =================
   useEffect(() => {
@@ -122,7 +131,7 @@ function DriverDashboard() {
           table: "waste_reports",
         },
         () => {
-          loadReports();
+          debouncedLoadReports();
         }
       )
       .subscribe();
@@ -161,129 +170,96 @@ function DriverDashboard() {
       );
     };
 
-    // Send immediately
     sendLocation();
-
-    // Send every 5 seconds
-    const interval = setInterval(sendLocation, 5000);
+    const interval = setInterval(sendLocation, 15000);
 
     return () => clearInterval(interval);
   }, [user]);
 
-// ================= LOAD ASSIGNED REPORTS =================
-async function loadReports() {
-  if (!user) return;
+  // ================= LOAD ASSIGNED REPORTS =================
+  async function loadReports() {
+    if (!user) return;
 
-  setLoading(true);
+    setLoading(true);
 
-  const { data, error } = await supabase
-    .from("waste_reports")
-    .select("*")
-    .eq("assigned_to", user.id)
-    .order("created_at", {
-      ascending: false,
-    });
+    const { data, error } = await supabase
+      .from("waste_reports")
+      .select("*")
+      .eq("assigned_to", user.id)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-  } else {
-    setReports(data ?? []);
+    if (error) {
+      console.error(error);
+    } else {
+      setReports(data ?? []);
+    }
+
+    setLoading(false);
   }
 
-  setLoading(false);
-}
+  // ================= UPDATE REPORT STATUS =================
+  async function updateReportStatus(reportId: string, status: string) {
+    const { error } = await supabase
+      .from("waste_reports")
+      .update({ status })
+      .eq("id", reportId);
 
-// ================= UPDATE REPORT STATUS =================
-async function updateReportStatus(
-  reportId: string,
-  status: string
-) {
-  const { error } = await supabase
-    .from("waste_reports")
-    .update({
-      status,
-    })
-    .eq("id", reportId);
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-  if (error) {
-    alert(error.message);
-    return;
+    loadReports();
   }
 
-  loadReports();
-}
-
-return (
-  <div className="space-y-6">
-
-    <div>
-      <h1 className="text-3xl font-bold">
-        Driver Dashboard
-      </h1>
-
-      <p className="text-gray-500">
-        Assigned Waste Collection Jobs
-      </p>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-      <StatCard
-        title="Assigned Jobs"
-        value={reports.length}
-        icon={Truck}
-        iconColor="bg-blue-500"
-      />
-
-      <StatCard
-        title="Completed"
-        value={
-          reports.filter(
-            (r) => r.status === "resolved"
-          ).length
-        }
-        icon={FileText}
-        iconColor="bg-green-500"
-      />
-
-      <StatCard
-        title="Remaining"
-        value={
-          reports.filter(
-            (r) => r.status !== "resolved"
-          ).length
-        }
-        icon={MapPin}
-        iconColor="bg-orange-500"
-      />
-
-    </div>
-
-    {loading && (
-      <div className="bg-white rounded-xl p-6 shadow">
-        Loading assigned reports...
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">{t('driver_dashboard')}</h1>
+        <p className="text-gray-500">{t('assigned_waste_jobs')}</p>
       </div>
-    )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          title={t('assigned_jobs')}
+          value={reports.length}
+          icon={Truck}
+          iconColor="bg-blue-500"
+        />
+
+        <StatCard
+          title={t('completed')}
+          value={reports.filter((r) => r.status === "resolved").length}
+          icon={FileText}
+          iconColor="bg-green-500"
+        />
+
+        <StatCard
+          title={t('remaining')}
+          value={reports.filter((r) => r.status !== "resolved").length}
+          icon={MapPin}
+          iconColor="bg-orange-500"
+        />
+      </div>
+
+      {loading && (
+        <div className="bg-white rounded-xl p-6 shadow">
+          {t('loading_assigned_reports')}
+        </div>
+      )}
 
       {!loading && reports.length === 0 && (
         <div className="bg-white rounded-xl p-10 shadow text-center text-gray-500">
-          No reports assigned to you.
+          {t('no_reports_assigned')}
         </div>
       )}
 
       {!loading &&
         reports.map((report) => (
-          <div
-            key={report.id}
-            className="bg-white rounded-xl shadow-lg p-5"
-          >
-
+          <div key={report.id} className="bg-white rounded-xl shadow-lg p-5">
             <div className="grid md:grid-cols-3 gap-5">
-
               <div>
-
-                {report.photos &&
-                report.photos.length > 0 ? (
+                {report.photos && report.photos.length > 0 ? (
                   <img
                     src={report.photos[0]}
                     alt="Waste"
@@ -291,83 +267,58 @@ return (
                   />
                 ) : (
                   <div className="bg-gray-200 rounded-xl h-52 flex items-center justify-center">
-                    No Photo
+                    {t('no_photo')}
                   </div>
                 )}
-
               </div>
 
               <div className="md:col-span-2 space-y-3">
-
                 <h2 className="text-xl font-bold capitalize">
                   {report.report_type.replaceAll("_", " ")}
                 </h2>
 
                 <p>{report.description}</p>
 
-                <p>
-                  📍 {report.address}
-                </p>
+                <p>📍 {report.address}</p>
 
                 <p>
-                  Status:
-                  <strong>
-                    {" "}
-                    {report.status.replaceAll("_", " ")}
-                  </strong>
+                  {t('status_label')}:
+                  <strong> {report.status.replaceAll("_", " ")}</strong>
                 </p>
-                  
-              <div className="flex gap-3 pt-4">
 
-  {report.status === "pending" && (
-    <button
-      onClick={() =>
-        updateReportStatus(
-          report.id,
-          "in_progress"
-        )
-      }
-      className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg"
-    >
-      Start Collection
-    </button>
-  )}
+                <div className="flex gap-3 pt-4">
+                  {report.status === "pending" && (
+                    <button
+                      onClick={() => updateReportStatus(report.id, "in_progress")}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg"
+                    >
+                      {t('start_collection')}
+                    </button>
+                  )}
 
-  {report.status === "in_progress" && (
-    <button
-      onClick={() =>
-        updateReportStatus(
-          report.id,
-          "resolved"
-        )
-      }
-      className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
-    >
-      Complete Job
-    </button>
-  )}
+                  {report.status === "in_progress" && (
+                    <button
+                      onClick={() => updateReportStatus(report.id, "resolved")}
+                      className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+                    >
+                      {t('complete_job')}
+                    </button>
+                  )}
 
-  {report.status === "resolved" && (
-    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-lg">
-      ✓ Completed
-    </span>
-  )}
-
-</div> 
+                  {report.status === "resolved" && (
+                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded-lg">
+                      ✓ {t('completed')}
+                    </span>
+                  )}
+                </div>
 
                 <p className="text-sm text-gray-500">
-                  {new Date(
-                    report.created_at
-                  ).toLocaleString()}
+                  {new Date(report.created_at).toLocaleString()}
                 </p>
-
               </div>
-
             </div>
-
           </div>
         ))}
-
     </div>
   );
 }
@@ -375,76 +326,53 @@ return (
 // ================= CITIZEN =================
 function CitizenDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Welcome back</h1>
+      <h1 className="text-2xl font-bold">{t('welcome_back')}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Eco Score"
-          value="—"
-          icon={Recycle}
-          iconColor="bg-success-500"
-        />
-
-        <StatCard
-          title="Points"
-          value="—"
-          icon={TrendingUp}
-          iconColor="bg-primary-500"
-        />
-
-        <StatCard
-          title="Next Collection"
-          value="—"
-          icon={Calendar}
-          iconColor="bg-secondary-500"
-        />
-
-        <StatCard
-          title="Reports"
-          value="—"
-          icon={FileText}
-          iconColor="bg-warning-500"
-        />
+        <StatCard title={t('eco_score')} value="—" icon={Recycle} iconColor="bg-success-500" />
+        <StatCard title={t('points')} value="—" icon={TrendingUp} iconColor="bg-primary-500" />
+        <StatCard title={t('next_collection')} value="—" icon={Calendar} iconColor="bg-secondary-500" />
+        <StatCard title={t('reports')} value="—" icon={FileText} iconColor="bg-warning-500" />
       </div>
 
       <ActivityFeed />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickAction
-          title="Report Issue"
-          description="Submit waste complaints"
+          title={t('report_issue')}
+          description={t('report_issue_desc')}
           icon={AlertTriangle}
           color="bg-warning-500"
           onClick={() => navigate("/report-issue")}
         />
 
         <QuickAction
-          title="Request Pickup"
-          description="Request waste pickup"
+          title={t('request_pickup')}
+          description={t('request_pickup_desc')}
           icon={Truck}
           color="bg-primary-500"
           onClick={() => navigate("/pickup-request")}
         />
 
-       <QuickAction
-         title="Track Truck"
-         description="Track collection vehicle"
-         icon={MapPin}
-         color="bg-secondary-500"
-         onClick={() => navigate("/track-truck")}
-       />
+        <QuickAction
+          title={t('track_truck')}
+          description={t('track_truck_desc')}
+          icon={MapPin}
+          color="bg-secondary-500"
+          onClick={() => navigate("/track-truck")}
+        />
 
-       <QuickAction
-         title="Pay Fees"
-         description="Pay waste collection fees"
-         icon={DollarSign}
-         color="bg-success-500"
-         onClick={() => navigate("/payment")}
-       />
-        
+        <QuickAction
+          title={t('pay_fees')}
+          description={t('pay_fees_desc')}
+          icon={DollarSign}
+          color="bg-success-500"
+          onClick={() => navigate("/payments")}
+        />
       </div>
     </div>
   );

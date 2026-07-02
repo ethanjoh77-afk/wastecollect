@@ -29,8 +29,6 @@ export interface Activity {
  * Create a new activity log (REAL Supabase insert)
  */
 export async function createActivity(payload: CreateActivityInput) {
-  console.log("ACTIVITY PAYLOAD:", payload);
-
   const { data, error } = await supabase
     .from("activities")
     .insert({
@@ -40,11 +38,8 @@ export async function createActivity(payload: CreateActivityInput) {
     .select()
     .single();
 
-  console.log("ACTIVITY DATA:", data);
-  console.log("ACTIVITY ERROR:", error);
-
   if (error) {
-    console.error(error);
+    console.error("Activity insert failed:", error.message);
     return null;
   }
 

@@ -5,6 +5,10 @@ import {
 } from "../services/complaints.service";
 import type { Complaint } from "../types/complaints.types";
 
+type NewComplaint = Omit
+  Complaint,
+  "id" | "created_at" | "updated_at" | "resolved_at"
+
 export function useComplaints() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -13,7 +17,6 @@ export function useComplaints() {
   async function load() {
     setLoading(true);
     setError(null);
-
     try {
       const data = await getComplaints();
       setComplaints(data);
@@ -24,7 +27,7 @@ export function useComplaints() {
     }
   }
 
-  async function create(data: any) {
+  async function create(data: NewComplaint) {
     const newComplaint = await createComplaint(data);
     setComplaints((prev) => [newComplaint, ...prev]);
     return newComplaint;

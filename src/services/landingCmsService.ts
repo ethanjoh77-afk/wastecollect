@@ -10,7 +10,10 @@ export async function getSection(section: string) {
   return data;
 }
 
-export async function updateContent(id: string, payload: any) {
+export async function updateContent(
+  id: string,
+  payload: Record<string, unknown>
+) {
   const { data, error } = await supabase
     .from("landing_content")
     .update(payload)

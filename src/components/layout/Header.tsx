@@ -2,6 +2,7 @@ import { useNotificationsStore } from "../../store";
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Menu,
   Bell,
@@ -18,9 +19,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppStore } from '../../store';
 import { Avatar } from './Avatar';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toggleSidebar } = useAppStore();
@@ -49,7 +52,7 @@ export function Header() {
             <Search className="w-5 h-5 text-secondary-400" />
             <input
               type="text"
-              placeholder="Search anything..."
+              placeholder={t('search_placeholder')}
               className="flex-1 bg-transparent outline-none text-secondary-900 dark:text-white placeholder-secondary-400"
             />
             <kbd className="hidden lg:block px-2 py-1 text-xs font-medium text-secondary-500 bg-white dark:bg-slate-700 border border-secondary-200 dark:border-slate-600 rounded-md">
@@ -59,6 +62,8 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors"
@@ -95,10 +100,10 @@ export function Header() {
                   >
                     <div className="px-4 py-3 border-b border-secondary-100 dark:border-slate-700 flex items-center justify-between">
                       <h3 className="font-semibold text-secondary-900 dark:text-white">
-                        Notifications
+                        {t('notifications')}
                       </h3>
                       <button className="text-xs text-primary-600 dark:text-primary-400 hover:underline">
-                        Mark all as read
+                        {t('mark_all_read')}
                       </button>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
@@ -132,7 +137,7 @@ export function Header() {
                         }}
                         className="w-full text-center text-sm text-primary-600 dark:text-primary-400 hover:underline"
                       >
-                        View all notifications
+                        {t('view_all_notifications')}
                       </button>
                     </div>
                   </motion.div>
@@ -192,7 +197,7 @@ export function Header() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-slate-700"
                       >
                         <User className="w-4 h-4" />
-                        Profile
+                        {t('profile')}
                       </button>
                       <button
                         onClick={() => {
@@ -202,7 +207,7 @@ export function Header() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-slate-700"
                       >
                         <Settings className="w-4 h-4" />
-                        Settings
+                        {t('settings')}
                       </button>
                     </div>
                     <div className="py-2 border-t border-secondary-100 dark:border-slate-700">
@@ -211,7 +216,7 @@ export function Header() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20"
                       >
                         <LogOut className="w-4 h-4" />
-                        Logout
+                        {t('logout')}
                       </button>
                     </div>
                   </motion.div>

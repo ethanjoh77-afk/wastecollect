@@ -1,64 +1,134 @@
 import { supabase } from "./supabase";
-import { createActivity } from "./activityService";
 
-interface CreatePaymentInput {
-  user_id: string;
-  amount: number;
-  payment_method:
-    | "mpesa"
-    | "airtel_money"
-    | "tigo_pesa"
-    | "halopesa"
-    | "card"
-    | "bank_transfer";
+export type ActivityType =
+  | "report"
+  | "payment"
+  | "collection"
+  | "alert"
+  | "success";
+
+export interface CreateActivityInput {
+  type: ActivityType;
+  title: string;
+  description: string;
+  user_id?: string;
+  role?: string;
 }
 
-export async function createPayment(data: CreatePaymentInput) {
-  // Get authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export interface Activity {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description: string;
+  user_id?: string;
+  role?: string;
+  created_at: string;
+}
 
-  console.log("AUTH USER:", user?.id);
-  console.log("PAYMENT USER:", data.user_id);
-
-  const transactionRef = `TXN-${Date.now()}`;
-  const receiptNumber = `RCT-${Date.now()}`;
-
-  // Create payment
-  const { data: payment, error } = await supabase
-    .from("payments")
+/**
+ * Create a new activity log (REAL Supabase insert)
+ */
+export async function createActivity(payload: CreateActivityInput) {
+  const { data, error } = await supabase
+    .from("activities")
     .insert({
-      user_id: data.user_id,
-      citizen_id: data.user_id,
-      amount: data.amount,
-      payment_method: data.payment_method,
-      payment_type: "subscription",
-      status: "pending",
-      transaction_ref: transactionRef,
-      receipt_number: receiptNumber,
+      ...payload,
+      created_at: new Date().toISOString(),
     })
     .select()
     .single();
 
   if (error) {
-    console.error("PAYMENT ERROR:", error);
-    throw error;
+    console.error("Activity log failed:", error.message);
+    return null;
   }
 
-  // Create activity
-  await createActivity({
-    type: "payment",
-    title: "Payment Submitted",
-    description: `TZS ${Number(data.amount).toLocaleString()} via ${data.payment_method}`,
-    user_id: data.user_id,
-    role: "citizen",
-  });
-
-  return payment;
+  return data;
 }
 
-export async function getUserPayments(userId: string) {
+/**
+ * Fetch latest activities
+ */
+export async function getActivities(limit = 10): Promise<Activity[]> {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Fetch activities failed:", error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+/* ================= PAYMENTS ================= */
+
+export type PaymentMethod =
+  | "mpesa"
+  | "airtel_money"
+  | "tigo_pesa"
+  | "halopesa"
+  | "card"
+  | "bank_transfer";
+
+export interface CreatePaymentInput {
+  user_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+}
+
+export interface Payment {
+  id: string;
+  user_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  status: "pending" | "completed" | "failed" | "refunded";
+  created_at: string;
+}
+
+/**
+ * Create a new payment record (REAL Supabase insert).
+ * Status inaanza kama "pending" kila wakati — hakuna uthibitisho wa
+ * kiotomatiki wa malipo bado (hakuna payment gateway iliyounganishwa).
+ * Ona maelezo ya awali kuhusu hitaji la Edge Function / webhook.
+ */
+export async function createPayment(
+  input: CreatePaymentInput
+): Promise<Payment> {
+  const { data, error } = await supabase
+    .from("payments")
+    .insert({
+      user_id: input.user_id,
+      amount: input.amount,
+      payment_method: input.payment_method,
+      status: "pending",
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  // Log activity (best-effort, isizuie malipo kama activity log ikishindwa)
+  await createActivity({
+    type: "payment",
+    title: "Ombi la malipo limesajiliwa",
+    description: `TZS ${input.amount.toLocaleString()} kupitia ${input.payment_method}`,
+    user_id: input.user_id,
+  });
+
+  return data as Payment;
+}
+
+/**
+ * Fetch payments for a specific user
+ */
+export async function getUserPayments(userId: string): Promise<Payment[]> {
   const { data, error } = await supabase
     .from("payments")
     .select("*")
@@ -66,9 +136,9 @@ export async function getUserPayments(userId: string) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("GET PAYMENTS ERROR:", error);
-    throw error;
+    console.error("Fetch payments failed:", error.message);
+    return [];
   }
 
-  return data ?? [];
+  return data || [];
 }

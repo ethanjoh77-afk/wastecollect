@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { User, Mail, Shield, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Profile = {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: string;
   created_at: string;
@@ -13,12 +15,12 @@ type Profile = {
 
 export default function ProfilePage() {
   const { user } = useAuth();
-
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   // ================= FETCH =================
   const fetchProfile = async () => {
@@ -27,19 +29,20 @@ export default function ProfilePage() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*")
       .eq("id", user.id)
       .single();
 
     if (error) {
-      console.error(error);
+      console.error("Profile fetch failed:", error.message);
       setLoading(false);
       return;
     }
 
     setProfile(data);
-    setName(data?.name || "");
+    setFirstName(data?.first_name || "");
+    setLastName(data?.last_name || "");
     setLoading(false);
   };
 
@@ -54,86 +57,94 @@ export default function ProfilePage() {
     setSaving(true);
 
     const { error } = await supabase
-      .from("profiles")
-      .update({ name })
+      .from("users")
+      .update({ first_name: firstName, last_name: lastName })
       .eq("id", user.id);
 
     setSaving(false);
 
     if (error) {
-      alert("Update failed");
+      alert(t('profile_update_failed'));
       return;
     }
 
-    alert("Profile updated");
+    alert(t('profile_updated'));
     fetchProfile();
   };
 
   if (loading) {
     return (
       <div className="p-6 text-gray-500">
-        Loading profile...
+        {t('profile_loading')}
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-
       {/* HEADER */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <User /> My Profile
+          <User /> {t('profile_title')}
         </h1>
         <p className="text-sm opacity-80">
-          Manage your account information
+          {t('profile_subtitle')}
         </p>
       </div>
 
       {/* PROFILE CARD */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* NAME */}
+        {/* FIRST NAME */}
         <div className="bg-white p-5 rounded-xl shadow border">
           <label className="text-sm text-gray-500 flex items-center gap-2">
-            <User size={16} /> Name
+            <User size={16} /> {t('profile_first_name')}
           </label>
-
           <input
             className="w-full mt-2 border rounded-lg p-2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </div>
+
+        {/* LAST NAME */}
+        <div className="bg-white p-5 rounded-xl shadow border">
+          <label className="text-sm text-gray-500 flex items-center gap-2">
+            <User size={16} /> {t('profile_last_name')}
+          </label>
+          <input
+            className="w-full mt-2 border rounded-lg p-2"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
           />
         </div>
 
         {/* EMAIL */}
         <div className="bg-white p-5 rounded-xl shadow border">
           <label className="text-sm text-gray-500 flex items-center gap-2">
-            <Mail size={16} /> Email
+            <Mail size={16} /> {t('profile_email')}
           </label>
-
           <p className="mt-2 font-medium">{profile?.email}</p>
         </div>
 
         {/* ROLE */}
         <div className="bg-white p-5 rounded-xl shadow border">
           <label className="text-sm text-gray-500 flex items-center gap-2">
-            <Shield size={16} /> Role
+            <Shield size={16} /> {t('profile_role')}
           </label>
-
           <p className="mt-2 font-medium capitalize">
-            {profile?.role}
+            {profile?.role?.replace('_', ' ')}
           </p>
         </div>
 
         {/* JOIN DATE */}
-        <div className="bg-white p-5 rounded-xl shadow border">
+        <div className="bg-white p-5 rounded-xl shadow border md:col-span-2">
           <label className="text-sm text-gray-500">
-            Joined
+            {t('profile_joined')}
           </label>
-
           <p className="mt-2 font-medium">
-            {new Date(profile?.created_at || "").toLocaleDateString()}
+            {profile?.created_at
+              ? new Date(profile.created_at).toLocaleDateString()
+              : "—"}
           </p>
         </div>
       </div>
@@ -146,7 +157,7 @@ export default function ProfilePage() {
           className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           <Save size={18} />
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? t('profile_saving') : t('profile_save_changes')}
         </button>
       </div>
     </div>

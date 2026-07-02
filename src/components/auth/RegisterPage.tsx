@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Mail,
   Lock,
@@ -19,6 +20,7 @@ import toast from 'react-hot-toast';
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
@@ -33,49 +35,52 @@ export function RegisterPage() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (step === 1) {
-    setStep(2);
-    return;
-  }
-
-  if (formData.password !== formData.confirm_password) {
-    toast.error('Passwords do not match');
-    return;
-  }
-
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: formData.phone,
-          role: formData.role,
-        },
-      },
-    });
-
-    if (error) {
-      throw error;
+    if (step === 1) {
+      setStep(2);
+      return;
     }
 
-    console.log(data);
+    if (formData.password !== formData.confirm_password) {
+      toast.error(t('register_password_mismatch'));
+      return;
+    }
 
-    toast.success('Account created successfully!');
+    if (formData.password.length < 8) {
+      toast.error(t('register_password_too_short'));
+      return;
+    }
 
-    navigate('/login');
-  } catch (error: any) {
-    console.error(error);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone: formData.phone,
+            role: formData.role,
+          },
+        },
+      });
 
-    toast.error(
-      error?.message || 'Registration failed. Please try again.'
-    );
-  }
-};
+      if (error) {
+        throw error;
+      }
+
+      toast.success(t('register_success'));
+
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Registration failed:', error?.message);
+
+      toast.error(
+        error?.message || t('register_failed')
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-secondary-50 to-primary-50 dark:from-slate-900 dark:to-slate-800">
@@ -94,12 +99,12 @@ export function RegisterPage() {
           className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8"
         >
           <h2 className="text-2xl font-bold text-secondary-900 dark:text-white mb-2">
-            {step === 1 ? 'Create an account' : 'Set your password'}
+            {step === 1 ? t('register_step1_title') : t('register_step2_title')}
           </h2>
           <p className="text-secondary-600 dark:text-secondary-400 mb-6">
             {step === 1
-              ? 'Join the digital waste management revolution'
-              : 'Create a secure password for your account'}
+              ? t('register_step1_subtitle')
+              : t('register_step2_subtitle')}
           </p>
 
           <div className="flex items-center gap-2 mb-6">
@@ -124,7 +129,7 @@ export function RegisterPage() {
               >
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label="First name"
+                    label={t('register_first_name')}
                     placeholder="John"
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
@@ -132,7 +137,7 @@ export function RegisterPage() {
                     required
                   />
                   <Input
-                    label="Last name"
+                    label={t('register_last_name')}
                     placeholder="Doe"
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
@@ -141,7 +146,7 @@ export function RegisterPage() {
                 </div>
 
                 <Input
-                  label="Email address"
+                  label={t('register_email')}
                   type="email"
                   placeholder="john@example.com"
                   value={formData.email}
@@ -151,7 +156,7 @@ export function RegisterPage() {
                 />
 
                 <Input
-                  label="Phone number"
+                  label={t('register_phone')}
                   type="tel"
                   placeholder="+255 7XX XXX XXX"
                   value={formData.phone}
@@ -161,12 +166,12 @@ export function RegisterPage() {
                 />
 
                 <Select
-                  label="Account type"
+                  label={t('register_account_type')}
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   options={[
-                    { value: 'citizen', label: 'Citizen' },
-                    { value: 'driver', label: 'Driver' },
+                    { value: 'citizen', label: t('register_role_citizen') },
+                    { value: 'driver', label: t('register_role_driver') },
                   ]}
                 />
               </motion.div>
@@ -179,9 +184,9 @@ export function RegisterPage() {
                 className="space-y-5"
               >
                 <Input
-                  label="Password"
+                  label={t('register_password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password"
+                  placeholder={t('register_password_placeholder')}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   leftIcon={<Lock className="w-5 h-5" />}
@@ -194,14 +199,14 @@ export function RegisterPage() {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   }
-                  hint="At least 8 characters with numbers and symbols"
+                  hint={t('register_password_hint')}
                   required
                 />
 
                 <Input
-                  label="Confirm password"
+                  label={t('register_confirm_password')}
                   type="password"
-                  placeholder="Confirm your password"
+                  placeholder={t('register_confirm_password_placeholder')}
                   value={formData.confirm_password}
                   onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
                   leftIcon={<Lock className="w-5 h-5" />}
@@ -218,41 +223,41 @@ export function RegisterPage() {
                   className="flex-1"
                   onClick={() => setStep(1)}
                 >
-                  Back
+                  {t('register_back')}
                 </Button>
               )}
               <Button type="submit" className="flex-1" size="lg" isLoading={isLoading}>
                 {step === 1 ? (
                   <>
-                    Continue
+                    {t('register_continue')}
                     <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
-                  'Create account'
+                  t('register_create_account')
                 )}
               </Button>
             </div>
           </form>
 
           <p className="mt-6 text-center text-sm text-secondary-600 dark:text-secondary-400">
-            Already have an account?{' '}
+            {t('register_have_account')}{' '}
             <Link
               to="/login"
               className="font-medium text-primary-600 dark:text-primary-400 hover:underline"
             >
-              Sign in
+              {t('login_sign_in')}
             </Link>
           </p>
         </motion.div>
 
         <p className="mt-6 text-center text-xs text-secondary-500 dark:text-secondary-400">
-          By creating an account, you agree to our{' '}
+          {t('register_terms_prefix')}{' '}
           <Link to="/terms" className="text-primary-600 dark:text-primary-400 hover:underline">
-            Terms of Service
+            {t('register_terms_of_service')}
           </Link>{' '}
-          and{' '}
+          {t('register_and')}{' '}
           <Link to="/privacy" className="text-primary-600 dark:text-primary-400 hover:underline">
-            Privacy Policy
+            {t('register_privacy_policy')}
           </Link>
         </p>
       </div>

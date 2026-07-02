@@ -4,12 +4,9 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found. Using demo mode.');
+  throw new Error(
+    'Supabase credentials hazipo. Hakikisha VITE_SUPABASE_URL na VITE_SUPABASE_ANON_KEY zimewekwa kwenye .env (au environment variables za production/hosting).'
+  );
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://demo.supabase.co',
-  supabaseAnonKey || 'demo-key'
-);
-
-export const isDemoMode = !supabaseUrl || !supabaseAnonKey;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

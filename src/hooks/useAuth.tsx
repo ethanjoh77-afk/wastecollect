@@ -7,7 +7,7 @@ import {
 } from "react";
 
 import { User, UserRole } from "../types";
-import { supabase, isDemoMode } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -29,16 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ================= INIT AUTH =================
   useEffect(() => {
-    let mounted = true;
-
     const init = async () => {
-      if (isDemoMode) {
-        const stored = localStorage.getItem("demo_user");
-        if (stored && mounted) setUser(JSON.parse(stored));
-        setIsLoading(false);
-        return;
-      }
-
       const { data } = await supabase.auth.getSession();
 
       if (data.session?.user) {
@@ -62,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -82,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data) {
         const { data: authData } = await supabase.auth.getUser();
-
         const authUser = authData.user;
 
         if (authUser) {
@@ -115,10 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      if (isDemoMode) {
-        throw new Error("Demo mode login disabled in production flow");
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -139,10 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      if (!isDemoMode) {
-        const { error } = await supabase.auth.signInWithOtp({ phone });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) throw error;
     } finally {
       setIsLoading(false);
     }
@@ -152,15 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      if (!isDemoMode) {
-        const { error } = await supabase.auth.verifyOtp({
-          phone,
-          token: code,
-          type: "sms",
-        });
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token: code,
+        type: "sms",
+      });
 
-        if (error) throw error;
-      }
+      if (error) throw error;
     } finally {
       setIsLoading(false);
     }
@@ -168,12 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ================= LOGOUT =================
   const logout = async () => {
-    if (isDemoMode) {
-      setUser(null);
-      localStorage.removeItem("demo_user");
-      return;
-    }
-
     await supabase.auth.signOut();
     setUser(null);
   };
@@ -188,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ================= UPDATE USER =================
   const updateUser = async (updates: Partial<User>) => {
-    if (!user || isDemoMode) return;
+    if (!user) return;
 
     const { error } = await supabase
       .from("users")
