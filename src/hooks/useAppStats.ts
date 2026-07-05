@@ -37,26 +37,26 @@ export function useAppStats() {
           { count: totalReports },
         ] = await Promise.all([
           supabase
-            .from("profiles")
+            .from("users")
             .select("*", { count: "exact", head: true })
             .eq("role", "citizen"),
           supabase
-            .from("profiles")
+            .from("users")
             .select("*", { count: "exact", head: true })
             .eq("role", "driver"),
           supabase
             .from("vehicles")
             .select("*", { count: "exact", head: true }),
           supabase
-            .from("profiles")
+            .from("users")
             .select("*", { count: "exact", head: true })
-            .eq("role", "municipality"),
+            .eq("role", "municipality_admin"),
           supabase
-            .from("reports")
+            .from("waste_reports")
             .select("*", { count: "exact", head: true })
             .eq("status", "resolved"),
           supabase
-            .from("reports")
+            .from("waste_reports")
             .select("*", { count: "exact", head: true }),
         ]);
 

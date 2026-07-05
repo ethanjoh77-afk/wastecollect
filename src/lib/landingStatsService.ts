@@ -16,7 +16,7 @@ export async function getLandingStats() {
 
   // REPORTS COUNT
   const { count: reports } = await supabase
-    .from("reports")
+    .from("waste_reports")
     .select("*", { count: "exact", head: true });
 
   // TRUCKS COUNT (optional table)
