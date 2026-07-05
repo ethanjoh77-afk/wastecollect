@@ -1,51 +1,59 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { Truck, Clock, User } from "lucide-react";
 
-type Truck = {
+type VehicleWithDriver = {
   id: string;
-  name: string;
-  plate_number: string;
-  status: string;
-  latitude: number | null;
-  longitude: number | null;
-  updated_at: string;
+  registration_number: string;
+  current_latitude: number | null;
+  current_longitude: number | null;
+  last_location_update: string | null;
+  driver_id: string | null;
+  users: {
+    first_name: string;
+    last_name: string;
+  } | null;
 };
 
 export default function TrackTruckPage() {
-  const [trucks, setTrucks] = useState<Truck[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTrucks = async () => {
+  async function loadVehicles() {
+    setLoading(true);
     const { data, error } = await supabase
-      .from("trucks")
-      .select("*")
-      .order("updated_at", { ascending: false });
+      .from("vehicles")
+      .select(`
+        id,
+        registration_number,
+        current_latitude,
+        current_longitude,
+        last_location_update,
+        driver_id,
+        users (
+          first_name,
+          last_name
+        )
+      `);
 
     if (error) {
-      console.error(error);
-      return;
+      console.error("Imeshindikana kupata magari:", error);
+      setVehicles([]);
+    } else {
+      setVehicles(data ?? []);
     }
-
-    setTrucks(data || []);
     setLoading(false);
-  };
+  }
 
   useEffect(() => {
-    fetchTrucks();
+    loadVehicles();
 
-    // 🔴 REALTIME LISTENER (Supabase)
     const channel = supabase
-      .channel("trucks-channel")
+      .channel("track-truck-page")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "trucks",
-        },
-        () => {
-          fetchTrucks();
-        }
+        { event: "*", schema: "public", table: "vehicles" },
+        () => loadVehicles()
       )
       .subscribe();
 
@@ -54,54 +62,57 @@ export default function TrackTruckPage() {
     };
   }, []);
 
+  function hasLiveLocation(v: VehicleWithDriver) {
+    return v.current_latitude != null && v.current_longitude != null;
+  }
+
   if (loading) {
-    return <div className="p-6">Loading trucks...</div>;
+    return <div className="p-6 text-center">Inapakia magari...</div>;
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Live Truck Tracking</h1>
+    <div className="p-4 max-w-2xl mx-auto space-y-4">
+      <h1 className="text-xl font-bold mb-4">Fuatilia Gari (Track Truck)</h1>
 
-      {trucks.length === 0 && (
-        <p className="text-gray-500">No trucks available</p>
+      {vehicles.length === 0 && (
+        <p className="text-gray-500">Hakuna gari lililosajiliwa kwa sasa.</p>
       )}
 
-      <div className="grid gap-4">
-        {trucks.map((truck) => (
-          <div
-            key={truck.id}
-            className="border rounded-xl p-4 shadow bg-white"
-          >
-            <h2 className="font-bold text-lg">{truck.name}</h2>
-
-            <p>Plate: {truck.plate_number}</p>
-
-            <p>
-              Status:{" "}
-              <span
-                className={
-                  truck.status === "active"
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                {truck.status}
-              </span>
-            </p>
-
-            <p>
-              Location:{" "}
-              {truck.latitude && truck.longitude
-                ? `${truck.latitude}, ${truck.longitude}`
-                : "Not available"}
-            </p>
-
-            <p className="text-sm text-gray-400">
-              Updated: {new Date(truck.updated_at).toLocaleString()}
-            </p>
+      {vehicles.map((v) => (
+        <div
+          key={v.id}
+          className="border rounded-xl p-4 shadow-sm flex flex-col gap-2"
+        >
+          <div className="flex items-center gap-2">
+            <Truck className="w-5 h-5 text-green-600" />
+            <span className="font-semibold">{v.registration_number}</span>
           </div>
-        ))}
-      </div>
+
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <User className="w-4 h-4" />
+            {v.users
+              ? `${v.users.first_name} ${v.users.last_name}`
+              : "Dereva hajapangwa"}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Clock className="w-4 h-4" />
+            {v.last_location_update
+              ? new Date(v.last_location_update).toLocaleString()
+              : "Hakuna taarifa ya mahali bado"}
+          </div>
+
+          {hasLiveLocation(v) ? (
+            <span className="text-xs text-green-600 font-medium">
+              🟢 Iko hewani (live)
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400 font-medium">
+              ⚪ Haipatikani mahali sasa hivi
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

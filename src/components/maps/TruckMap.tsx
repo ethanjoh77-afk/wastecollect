@@ -24,10 +24,11 @@ L.Icon.Default.mergeOptions({
 });
 
 type TruckLocation = {
-  driver_id: string;
-  latitude: number;
-  longitude: number;
-  updated_at: string;
+  driver_id: string | null;
+  current_latitude: number;
+  current_longitude: number;
+  last_location_update: string;
+  registration_number: string;
 
   users: {
     first_name: string;
@@ -40,14 +41,20 @@ export default function TruckMap() {
 
   async function loadLocations() {
     const { data, error } = await supabase
-      .from("truck_locations")
+      .from("vehicles")
       .select(`
-        *,
+        driver_id,
+        current_latitude,
+        current_longitude,
+        last_location_update,
+        registration_number,
         users (
           first_name,
           last_name
         )
-      `);
+      `)
+      .not("current_latitude", "is", null)
+      .not("current_longitude", "is", null);
 
     if (error) {
       console.error(error);
@@ -70,7 +77,7 @@ export default function TruckMap() {
         {
           event: "*",
           schema: "public",
-          table: "truck_locations",
+          table: "vehicles",
         },
         () => {
           debouncedLoad();
@@ -100,8 +107,8 @@ export default function TruckMap() {
 
       {trucks.map((truck) => (
         <Marker
-          key={truck.driver_id}
-          position={[truck.latitude, truck.longitude]}
+          key={truck.driver_id ?? truck.registration_number}
+          position={[truck.current_latitude, truck.current_longitude]}
           icon={truckIcon}
         >
           <Popup>
@@ -112,15 +119,15 @@ export default function TruckMap() {
             </h3>
 
             <p className="mt-2">
-              <strong>Driver ID</strong>
+              <strong>Gari</strong>
               <br />
-              {truck.driver_id}
+              {truck.registration_number}
             </p>
 
             <p className="text-xs text-gray-500 mt-2">
               Last Update
               <br />
-              {new Date(truck.updated_at).toLocaleString()}
+              {new Date(truck.last_location_update).toLocaleString()}
             </p>
           </Popup>
         </Marker>
