@@ -8,7 +8,6 @@ import type { Complaint } from "../types/complaints.types";
 type NewComplaint = Omit
   Complaint,
   "id" | "created_at" | "updated_at" | "resolved_at"
->;
 
 export function useComplaints() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
