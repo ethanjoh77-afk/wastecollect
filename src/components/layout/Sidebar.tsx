@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import {
   LayoutDashboard,
   FileText,
@@ -143,7 +144,10 @@ export function Sidebar() {
             <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
               {t('contact_support')}
             </p>
-            <button className="mt-3 w-full py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors">
+            <button
+              onClick={() => toast('Huduma ya msaada inakuja hivi karibuni', { icon: '🛠️' })}
+              className="mt-3 w-full py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
               {t('get_support')}
             </button>
           </div>
