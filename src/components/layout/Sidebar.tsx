@@ -12,7 +12,6 @@ import {
   MessageSquare,
   X,
   Leaf,
-  Brain,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,12 +31,6 @@ const navItems: NavItem[] = [
     labelKey: 'nav_reports',
     path: '/reports',
     icon: FileText,
-    roles: ['super_admin', 'municipality_admin', 'company_admin'],
-  },
-  {
-    labelKey: 'nav_ai_hotspots',
-    path: '/hotspots',
-    icon: Brain,
     roles: ['super_admin', 'municipality_admin', 'company_admin'],
   },
   {

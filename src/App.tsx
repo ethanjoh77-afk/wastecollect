@@ -5,7 +5,6 @@ import { AdminRoute } from "./components/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
 
 /* ================= LAZY PAGES ================= */
-const HotspotPredictionPage = lazy(() => import("./pages/HotspotPredictionPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./components/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./components/auth/RegisterPage"));
@@ -101,7 +100,6 @@ function App() {
           <Route element={<AdminRoute roles={["super_admin", "municipality_admin", "company_admin"]} />}>
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/reports" element={<AdminReportsPage />} />
-            <Route path="/hotspots" element={<HotspotPredictionPage />} />
             <Route
               path="/analytics"
               element={
