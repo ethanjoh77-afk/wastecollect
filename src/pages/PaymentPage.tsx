@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { createPayment, PaymentMethod } from "../lib/paymentService";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import PaymentQRCode from "../components/PaymentQRCode";
 
 const MAX_AMOUNT = 10_000_000; // TZS 10M - epuka makosa ya kuandika
 
@@ -84,6 +85,8 @@ export default function PaymentPage() {
       <p className="text-xs text-gray-400 text-center">
         {t('payment_confirm_note')}
       </p>
+
+      <PaymentQRCode amount={amount || undefined} />
     </div>
   );
 }
