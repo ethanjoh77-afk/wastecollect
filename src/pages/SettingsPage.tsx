@@ -131,19 +131,8 @@ export default function SettingsPage() {
         </select>
       </div>
 
-      {/* ACCENT */}
-      <div className="p-5 border rounded-xl">
-        <h2>{t('settings_accent')}</h2>
-
-        <select
-          value={accent}
-          onChange={(e) => setAccent(e.target.value)}
-        >
-          <option value="blue">{t('settings_accent_blue')}</option>
-          <option value="green">{t('settings_accent_green')}</option>
-          <option value="red">{t('settings_accent_red')}</option>
-        </select>
-      </div>
+      {/* ACCENT - imefichwa kwa muda: bado haijaunganishwa na mfumo wa rangi wa app.
+          Itaonyeshwa tena baada ya kuunganishwa kikamilifu. */}
 
       {/* SAVE */}
       <button
