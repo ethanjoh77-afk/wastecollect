@@ -97,9 +97,17 @@ export function Header() {
     }
   };
 
-  const handleNotificationClick = async (id: string) => {
-    markAsRead(id);
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+  const handleNotificationClick = async (notification: any) => {
+    markAsRead(notification.id);
+    await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
+    setShowNotifications(false);
+
+    // Peleka mtumiaji mahali sahihi kulingana na aina ya notification
+    if (notification.type === 'new_report') {
+      navigate('/reports');
+    } else if (notification.type === 'report_assigned') {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -183,7 +191,7 @@ export function Header() {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          onClick={() => handleNotificationClick(notification.id)}
+                          onClick={() => handleNotificationClick(notification)}
                           className={cn(
                             'px-4 py-3 hover:bg-secondary-50 dark:hover:bg-slate-700 cursor-pointer border-l-2',
                             notification.is_read
