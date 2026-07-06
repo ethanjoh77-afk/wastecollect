@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../hooks/useAuth";
@@ -9,6 +9,13 @@ import { uploadReportPhoto } from "../lib/storageService";
 import { Input } from "../components/common/Input";
 import { Select } from "../components/common/Select";
 import { Textarea } from "../components/common/Textarea";
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-700",
+  in_review: "bg-blue-100 text-blue-700",
+  resolved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+};
 
 export default function ReportIssue() {
   const { user } = useAuth();
@@ -24,6 +31,45 @@ export default function ReportIssue() {
   const [locationLng, setLocationLng] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const [myReports, setMyReports] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
+
+  const loadMyReports = async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from("waste_reports")
+      .select("*")
+      .eq("citizen_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (!error) setMyReports(data || []);
+    setLoadingReports(false);
+  };
+
+  useEffect(() => {
+    loadMyReports();
+
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`my-reports-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "waste_reports",
+          filter: `citizen_id=eq.${user.id}`,
+        },
+        () => loadMyReports()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -106,6 +152,8 @@ export default function ReportIssue() {
       setLocationLat(null);
       setLocationLng(null);
 
+      loadMyReports();
+
       alert(t('report_success'));
     } catch (err: any) {
       console.error("Report submission failed:", err.message);
@@ -128,7 +176,6 @@ export default function ReportIssue() {
         onSubmit={handleSubmit}
         className="bg-white dark:bg-slate-900 rounded-xl shadow p-6 space-y-5"
       >
-        {/* Report Type */}
         <Select
           label={t('report_type_label')}
           value={reportType}
@@ -142,7 +189,6 @@ export default function ReportIssue() {
           ]}
         />
 
-        {/* Description */}
         <Textarea
           label={t('report_description_label')}
           rows={5}
@@ -152,7 +198,6 @@ export default function ReportIssue() {
           required
         />
 
-        {/* Address */}
         <Input
           label={t('report_address_label')}
           type="text"
@@ -162,7 +207,6 @@ export default function ReportIssue() {
           required
         />
 
-        {/* GPS */}
         <div>
           <button
             type="button"
@@ -184,7 +228,6 @@ export default function ReportIssue() {
           )}
         </div>
 
-        {/* Photo */}
         <div>
           <label className="block font-medium mb-2 text-secondary-700 dark:text-secondary-300">
             {t('report_upload_photo')}
@@ -216,7 +259,6 @@ export default function ReportIssue() {
           )}
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
@@ -225,6 +267,62 @@ export default function ReportIssue() {
           {loading ? t('report_submitting') : t('report_submit_btn')}
         </button>
       </form>
+
+      {/* RIPOTI ZANGU */}
+      <div className="mt-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="text-secondary-400" size={20} />
+          <h2 className="text-lg font-bold text-secondary-900 dark:text-white">
+            {t('my_reports', 'Ripoti Zangu')}
+          </h2>
+        </div>
+
+        {loadingReports && (
+          <p className="text-sm text-secondary-400">{t('loading', 'Inapakia...')}</p>
+        )}
+
+        {!loadingReports && myReports.length === 0 && (
+          <p className="text-sm text-secondary-400">
+            {t('no_reports_yet', 'Bado hujatuma ripoti yoyote')}
+          </p>
+        )}
+
+        <div className="space-y-3">
+          {myReports.map((report) => (
+            <div
+              key={report.id}
+              className="border border-secondary-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-medium text-secondary-900 dark:text-white capitalize">
+                  {report.report_type.replaceAll("_", " ")}
+                </h3>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+                    STATUS_STYLES[report.status] || "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {report.status.replaceAll("_", " ")}
+                </span>
+              </div>
+
+              <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                {report.description}
+              </p>
+
+              <p className="text-xs text-secondary-400 mt-2">
+                {report.address} · {new Date(report.created_at).toLocaleDateString()}
+              </p>
+
+              {report.resolution_notes && (
+                <p className="text-xs mt-2 text-green-700 bg-green-50 rounded-lg p-2">
+                  {report.resolution_notes}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

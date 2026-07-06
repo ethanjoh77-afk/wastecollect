@@ -45,7 +45,6 @@ export function Header() {
     addNotification,
   } = useNotificationsStore();
 
-  // Pakia notifications za kweli kutoka Supabase kwa mtumiaji aliyeingia
   useEffect(() => {
     if (!user?.id) return;
 
@@ -64,7 +63,6 @@ export function Header() {
 
     loadNotifications();
 
-    // Sikiliza notifications mpya papo hapo (bila kuhitaji refresh)
     const channel = supabase
       .channel(`notifications-${user.id}`)
       .on(
@@ -102,11 +100,12 @@ export function Header() {
     await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
     setShowNotifications(false);
 
-    // Peleka mtumiaji mahali sahihi kulingana na aina ya notification
     if (notification.type === 'new_report') {
       navigate('/reports');
     } else if (notification.type === 'report_assigned') {
       navigate('/dashboard');
+    } else if (notification.type === 'report_status_update') {
+      navigate('/report-issue');
     }
   };
 
