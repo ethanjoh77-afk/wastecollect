@@ -1,5 +1,5 @@
 import { useNotificationsStore } from "../../store";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAppStore } from '../../store';
 import { Avatar } from './Avatar';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { supabase } from '../../lib/supabase';
 
 export function Header() {
   const navigate = useNavigate();
@@ -35,7 +36,71 @@ export function Header() {
     navigate('/login');
   };
 
-  const { notifications, unreadCount } = useNotificationsStore();
+  const {
+    notifications,
+    unreadCount,
+    setNotifications,
+    markAsRead,
+    markAllAsRead,
+    addNotification,
+  } = useNotificationsStore();
+
+  // Pakia notifications za kweli kutoka Supabase kwa mtumiaji aliyeingia
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (!error && data) {
+        setNotifications(data);
+      }
+    };
+
+    loadNotifications();
+
+    // Sikiliza notifications mpya papo hapo (bila kuhitaji refresh)
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          addNotification(payload.new as any);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const handleMarkAllRead = async () => {
+    markAllAsRead();
+    if (user?.id) {
+      await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+    }
+  };
+
+  const handleNotificationClick = async (id: string) => {
+    markAsRead(id);
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-secondary-100 dark:border-slate-700">
@@ -102,17 +167,26 @@ export function Header() {
                       <h3 className="font-semibold text-secondary-900 dark:text-white">
                         {t('notifications')}
                       </h3>
-                      <button className="text-xs text-primary-600 dark:text-primary-400 hover:underline">
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                      >
                         {t('mark_all_read')}
                       </button>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 && (
+                        <p className="px-4 py-6 text-sm text-secondary-400 text-center">
+                          {t('no_notifications', 'Hakuna taarifa bado')}
+                        </p>
+                      )}
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
+                          onClick={() => handleNotificationClick(notification.id)}
                           className={cn(
                             'px-4 py-3 hover:bg-secondary-50 dark:hover:bg-slate-700 cursor-pointer border-l-2',
-                            notification.read
+                            notification.is_read
                               ? 'border-transparent'
                               : 'border-primary-500 bg-primary-50/50 dark:bg-primary-900/10'
                           )}
@@ -124,7 +198,7 @@ export function Header() {
                             {notification.message}
                           </p>
                           <p className="text-xs text-secondary-400 dark:text-secondary-500 mt-1">
-                            {notification.time}
+                            {new Date(notification.created_at).toLocaleString()}
                           </p>
                         </div>
                       ))}
