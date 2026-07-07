@@ -212,6 +212,30 @@ function DriverDashboard() {
     loadReports();
   }
 
+  // ================= REPORT DRIVER ISSUE (Ripoti Changamoto) =================
+  async function reportDriverIssue(reportId: string) {
+    const note = window.prompt(
+      t(
+        'report_challenge_prompt',
+        'Eleza changamoto uliyonayo (mfano: mzigo mkubwa, muda mrefu wa ukusanyaji):'
+      )
+    );
+
+    if (!note || !note.trim()) return;
+
+    const { error } = await supabase.rpc('report_driver_issue', {
+      p_report_id: reportId,
+      p_note: note.trim(),
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert(t('report_challenge_sent', 'Umetuma taarifa ya changamoto kwa admin.'));
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -309,6 +333,15 @@ function DriverDashboard() {
                     <span className="bg-green-100 text-green-700 px-4 py-2 rounded-lg">
                       ✓ {t('completed')}
                     </span>
+                  )}
+
+                  {report.status !== "resolved" && (
+                    <button
+                      onClick={() => reportDriverIssue(report.id)}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg"
+                    >
+                      ⚠️ {t('report_challenge', 'Ripoti Changamoto')}
+                    </button>
                   )}
                 </div>
 

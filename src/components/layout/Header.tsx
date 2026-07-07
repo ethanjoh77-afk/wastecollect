@@ -100,7 +100,7 @@ export function Header() {
     await supabase.from('notifications').update({ is_read: true }).eq('id', notification.id);
     setShowNotifications(false);
 
-    if (notification.type === 'new_report') {
+    if (notification.type === 'new_report' || notification.type === 'driver_issue') {
       navigate('/reports');
     } else if (notification.type === 'report_assigned') {
       navigate('/dashboard');
