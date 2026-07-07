@@ -9,6 +9,8 @@ const resources = {
       start_trial: "Anza Bure",
 
       // Header
+      admin_contact_messages: "Ujumbe wa Wateja",
+      admin_no_messages: "Hakuna ujumbe bado",
       admin_dashboard_title: "Dashibodi ya Msimamizi",
       admin_dashboard_subtitle: "Muhtasari wa Usimamizi wa Taka kwa Wakati Halisi",
       admin_live_truck_tracking: "Ufuatiliaji wa Magari Papo Hapo",
@@ -329,6 +331,8 @@ const resources = {
       start_trial: "Start Free Trial",
 
       // Header
+      admin_contact_messages: "Contact Messages",
+      admin_no_messages: "No messages yet",
       admin_dashboard_title: "Admin Dashboard",
       admin_dashboard_subtitle: "Real-time Waste Management Overview",
       admin_live_truck_tracking: "Live Truck Tracking",
