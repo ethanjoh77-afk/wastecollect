@@ -360,6 +360,41 @@ function DriverDashboard() {
 function CitizenDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  const [reportsCount, setReportsCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadCount = async () => {
+      const { count } = await supabase
+        .from("waste_reports")
+        .select("*", { count: "exact", head: true })
+        .eq("citizen_id", user.id);
+      setReportsCount(count ?? 0);
+    };
+
+    loadCount();
+
+    const channel = supabase
+      .channel(`citizen-reports-count-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "waste_reports",
+          filter: `citizen_id=eq.${user.id}`,
+        },
+        () => loadCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
@@ -369,7 +404,12 @@ function CitizenDashboard() {
         <StatCard title={t('eco_score')} value="—" icon={Recycle} iconColor="bg-success-500" />
         <StatCard title={t('points')} value="—" icon={TrendingUp} iconColor="bg-primary-500" />
         <StatCard title={t('next_collection')} value="—" icon={Calendar} iconColor="bg-secondary-500" />
-        <StatCard title={t('reports')} value="—" icon={FileText} iconColor="bg-warning-500" />
+        <StatCard
+          title={t('reports')}
+          value={reportsCount === null ? "—" : reportsCount}
+          icon={FileText}
+          iconColor="bg-warning-500"
+        />
       </div>
 
       <ActivityFeed />
