@@ -9,6 +9,15 @@ const resources = {
       start_trial: "Anza Bure",
 
       // Header
+      // Notifications (Kiswahili)
+      notif_payment_success_title: "Malipo Yamepokelewa",
+      notif_payment_success_message: "Malipo yako ya {{amount}} yamefanikiwa.",
+      notif_report_submitted_title: "Ripoti Imetumwa",
+      notif_report_submitted_message: "Ripoti yako imepokelewa na inakaguliwa.",
+      notif_new_report_title: "Ripoti Mpya ya Taka",
+      notif_new_report_message: "Ripoti mpya imetumwa: {{report_type}} - {{address}}",
+      notif_report_assigned_title: "Umepangiwa Ripoti Mpya",
+      notif_report_assigned_message: "Umepangiwa kwenda eneo: {{address}}",
       // Driver: accept/decline assignment
       new_assignment_title: "Umepangiwa kazi mpya — kubali au kataa",
       accept_job: "Kubali Kazi",
@@ -354,6 +363,15 @@ const resources = {
       start_trial: "Start Free Trial",
 
       // Header
+      // Notifications (English)
+      notif_payment_success_title: "Payment Received",
+      notif_payment_success_message: "Your payment of {{amount}} was successful.",
+      notif_report_submitted_title: "Report Submitted",
+      notif_report_submitted_message: "Your issue has been received and is under review.",
+      notif_new_report_title: "New Waste Report",
+      notif_new_report_message: "New report submitted: {{report_type}} - {{address}}",
+      notif_report_assigned_title: "You've Been Assigned a Report",
+      notif_report_assigned_message: "You've been assigned to location: {{address}}",
       // Driver: accept/decline assignment
       new_assignment_title: "You've been assigned a new job — accept or decline",
       accept_job: "Accept Job",

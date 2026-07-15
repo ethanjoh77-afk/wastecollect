@@ -28,6 +28,20 @@ export function Header() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { toggleSidebar } = useAppStore();
+
+  // ================= TRANSLATE NOTIFICATION FROM type + data =================
+  function getNotificationTitle(notification: any) {
+    const key = `notif_${notification.type}_title`;
+    const translated = t(key);
+    return translated === key ? notification.title : translated;
+  }
+
+  function getNotificationMessage(notification: any) {
+    const key = `notif_${notification.type}_message`;
+    const data = notification.data ?? {};
+    const translated = t(key, data);
+    return translated === key ? notification.message : translated;
+  }
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -199,10 +213,10 @@ export function Header() {
                           )}
                         >
                           <p className="text-sm font-medium text-secondary-900 dark:text-white">
-                            {notification.title}
+                            {getNotificationTitle(notification)}
                           </p>
                           <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-0.5">
-                            {notification.message}
+                            {getNotificationMessage(notification)}
                           </p>
                           <p className="text-xs text-secondary-400 dark:text-secondary-500 mt-1">
                             {new Date(notification.created_at).toLocaleString()}
