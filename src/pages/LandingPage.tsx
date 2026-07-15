@@ -16,25 +16,21 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {/* LANGUAGE SWITCHER — juu kabisa, inaonekana kwenye ukurasa mzima */}
       <div className="fixed top-4 right-4 z-50">
         <LanguageSwitcher variant="light" />
       </div>
 
-      {/* HERO SECTION — background image imewekwa hapa pekee */}
       <section
         className="relative text-white bg-center bg-no-repeat bg-cover px-6 md:px-8 py-16 min-h-[600px] flex flex-col justify-center"
         style={{
           backgroundImage: "url('/images/hero-bg.png')",
         }}
       >
-        {/* Overlay nyeusi kwa usomekaji wa maandishi */}
         <div className="absolute inset-0 bg-black/50" />
 
         <div className="relative z-10">
           <Hero />
 
-          {/* AUTH ACTIONS */}
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <button
               onClick={() => navigate("/register")}
@@ -52,7 +48,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CONTENT FLOW — bila background image */}
       <Stats />
       <Features />
       <Steps />

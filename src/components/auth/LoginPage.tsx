@@ -11,9 +11,10 @@ import toast from 'react-hot-toast';
 export function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
   const { stats, loading: statsLoading } = useAppStats();
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,6 +22,7 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       await login(formData.email, formData.password);
@@ -35,6 +37,8 @@ export function LoginPage() {
           error?.error_description ||
           t('login_failed')
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -158,7 +162,7 @@ export function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+              <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
                 {t('login_sign_in')}
               </Button>
             </form>
@@ -178,4 +182,5 @@ export function LoginPage() {
     </div>
   );
 }
+
 export default LoginPage;
