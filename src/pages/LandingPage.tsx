@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { LanguageSwitcher } from "../components/layout/LanguageSwitcher";
 import Hero from "../components/landing/Hero";
 import Stats from "../components/landing/Stats";
 import Features from "../components/landing/Features";
@@ -15,6 +16,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* LANGUAGE SWITCHER — juu kabisa, inaonekana kwenye ukurasa mzima */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher variant="light" />
+      </div>
+
       {/* HERO SECTION — background image imewekwa hapa pekee */}
       <section
         className="relative text-white bg-center bg-no-repeat bg-cover px-6 md:px-8 py-16 min-h-[600px] flex flex-col justify-center"
