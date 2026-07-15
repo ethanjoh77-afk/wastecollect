@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { PaymentListener } from "./components/PaymentListener";
 import { AdminRoute } from "./components/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
+import { SplashScreen } from "./components/common/SplashScreen";
 
 /* ================= LAZY PAGES ================= */
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -44,8 +46,19 @@ function ProtectedRoute() {
 
 /* ================= APP ================= */
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 1600);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
+      <AnimatePresence>
+        {showSplash && <SplashScreen />}
+      </AnimatePresence>
+
       <PaymentListener />
       <Suspense
         fallback={
