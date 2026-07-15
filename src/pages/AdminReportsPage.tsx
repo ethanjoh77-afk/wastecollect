@@ -13,6 +13,10 @@ type Report = {
   created_at: string;
   assigned_to: string | null;
   photos?: string[];
+  driver_issue_note?: string | null;
+  issue_reported_at?: string | null;
+  decline_note?: string | null;
+  declined_at?: string | null;
 };
 
 type Driver = {
@@ -26,6 +30,7 @@ export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reassignTarget, setReassignTarget] = useState<Record<string, string>>({});
 
   const debouncedLoadReports = useRef(debounce(loadReports, 1000)).current;
 
@@ -66,7 +71,13 @@ export default function AdminReportsPage() {
   async function assignDriver(reportId: string, driverId: string) {
     const { error } = await supabase
       .from("waste_reports")
-      .update({ assigned_to: driverId })
+      .update({
+        assigned_to: driverId,
+        status: "assigned",
+        decline_note: null,
+        declined_at: null,
+        declined_by: null,
+      })
       .eq("id", reportId);
     if (error) { alert(error.message); return; }
     loadReports();
@@ -81,11 +92,34 @@ export default function AdminReportsPage() {
     loadReports();
   }
 
+  // ================= CONFIRM ISSUE + REASSIGN TO NEW DRIVER =================
+  async function confirmAndReassign(reportId: string) {
+    const newDriverId = reassignTarget[reportId];
+    if (!newDriverId) {
+      alert(t('admin_reports_pick_driver_first', 'Chagua dereva mpya kwanza.'));
+      return;
+    }
+
+    const { error } = await supabase.rpc('confirm_and_reassign_report', {
+      p_report_id: reportId,
+      p_new_driver_id: newDriverId,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    loadReports();
+  }
+
   function badgeColor(status: string) {
     switch (status) {
       case "resolved": return "bg-green-500";
       case "in_progress": return "bg-yellow-500";
-      default: return "bg-red-500";
+      case "assigned": return "bg-blue-500";
+      case "issue_reported": return "bg-red-500";
+      default: return "bg-gray-400";
     }
   }
 
@@ -103,7 +137,12 @@ export default function AdminReportsPage() {
           <p className="text-gray-500">{t('admin_reports_none_found')}</p>
         ) : (
           reports.map((report) => (
-            <div key={report.id} className="bg-white rounded-xl shadow-lg p-6">
+            <div
+              key={report.id}
+              className={`bg-white rounded-xl shadow-lg p-6 ${
+                report.status === "issue_reported" ? "ring-2 ring-red-400" : ""
+              }`}
+            >
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
                   {report.photos && report.photos.length > 0 ? (
@@ -137,6 +176,71 @@ export default function AdminReportsPage() {
                     </span>
                   </div>
 
+                  {/* ===== DRIVER DECLINED ALERT ===== */}
+                  {report.status === "pending" && !report.assigned_to && report.decline_note && (
+                    <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
+                      <p className="font-semibold text-amber-700">
+                        🚫 {t('admin_reports_declined_title', 'Dereva aliyekuwa amepangiwa amekataa kazi hii')}
+                      </p>
+                      <p className="text-amber-700 text-sm mt-1">{report.decline_note}</p>
+                      {report.declined_at && (
+                        <p className="text-xs text-amber-500 mt-1">
+                          {new Date(report.declined_at).toLocaleString()}
+                        </p>
+                      )}
+                      <p className="text-xs text-amber-600 mt-2">
+                        {t('admin_reports_declined_hint', 'Mpangie dereva mwingine hapa chini.')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ===== DRIVER ISSUE ALERT ===== */}
+                  {report.status === "issue_reported" && (
+                    <div className="bg-red-50 border border-red-300 rounded-lg p-4 space-y-3">
+                      <p className="font-semibold text-red-700">
+                        ⚠️ {t('admin_reports_driver_issue_title', 'Dereva ameripoti changamoto')}
+                      </p>
+                      <p className="text-red-700 text-sm">
+                        {report.driver_issue_note}
+                      </p>
+                      {report.issue_reported_at && (
+                        <p className="text-xs text-red-500">
+                          {new Date(report.issue_reported_at).toLocaleString()}
+                        </p>
+                      )}
+
+                      <div>
+                        <label className="block font-medium mb-2 text-sm">
+                          {t('admin_reports_reassign_to', 'Mpangie dereva mwingine')}
+                        </label>
+                        <div className="flex gap-2">
+                          <select
+                            value={reassignTarget[report.id] ?? ""}
+                            onChange={(e) =>
+                              setReassignTarget((prev) => ({ ...prev, [report.id]: e.target.value }))
+                            }
+                            className="flex-1 border rounded-lg p-3"
+                          >
+                            <option value="">{t('admin_reports_select_driver')}</option>
+                            {drivers
+                              .filter((d) => d.id !== report.assigned_to)
+                              .map((driver) => (
+                                <option key={driver.id} value={driver.id}>
+                                  {driver.first_name} {driver.last_name}
+                                </option>
+                              ))}
+                          </select>
+                          <button
+                            onClick={() => confirmAndReassign(report.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg whitespace-nowrap"
+                          >
+                            {t('admin_reports_confirm_reassign', 'Thibitisha na Mpangie')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block font-medium mb-2">{t('admin_reports_change_status')}</label>
                     <select
@@ -145,7 +249,9 @@ export default function AdminReportsPage() {
                       className="w-full border rounded-lg p-3"
                     >
                       <option value="pending">{t('status_pending')}</option>
+                      <option value="assigned">{t('status_assigned', 'Amepangiwa (Inasubiri)')}</option>
                       <option value="in_progress">{t('status_in_progress')}</option>
+                      <option value="issue_reported">{t('status_issue_reported', 'Changamoto')}</option>
                       <option value="resolved">{t('status_resolved')}</option>
                     </select>
                   </div>

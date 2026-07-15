@@ -9,6 +9,29 @@ const resources = {
       start_trial: "Anza Bure",
 
       // Header
+      // Driver: accept/decline assignment
+      new_assignment_title: "Umepangiwa kazi mpya — kubali au kataa",
+      accept_job: "Kubali Kazi",
+      decline_job: "Kataa Kazi",
+      decline_assignment_prompt: "Kwa nini unakataa kazi hii? (mfano: mbali sana, gari halifanyi kazi)",
+      decline_assignment_sent: "Umekataa kazi hii. Admin ataarifiwa.",
+
+      // Driver: report issue
+      report_challenge: "Ripoti Changamoto",
+      report_challenge_prompt: "Eleza changamoto uliyonayo (mfano: mzigo mkubwa, muda mrefu wa ukusanyaji):",
+      report_challenge_sent: "Umetuma taarifa ya changamoto kwa admin.",
+
+      // Statuses
+      status_assigned: "Amepangiwa (Inasubiri)",
+      status_issue_reported: "Changamoto",
+
+      // Admin: reports page
+      admin_reports_declined_title: "Dereva aliyekuwa amepangiwa amekataa kazi hii",
+      admin_reports_declined_hint: "Mpangie dereva mwingine hapa chini.",
+      admin_reports_driver_issue_title: "Dereva ameripoti changamoto",
+      admin_reports_reassign_to: "Mpangie dereva mwingine",
+      admin_reports_confirm_reassign: "Thibitisha na Mpangie",
+      admin_reports_pick_driver_first: "Chagua dereva mpya kwanza.",
       admin_contact_messages: "Ujumbe wa Wateja",
       admin_no_messages: "Hakuna ujumbe bado",
       admin_dashboard_title: "Dashibodi ya Msimamizi",
@@ -331,6 +354,29 @@ const resources = {
       start_trial: "Start Free Trial",
 
       // Header
+      // Driver: accept/decline assignment
+      new_assignment_title: "You've been assigned a new job — accept or decline",
+      accept_job: "Accept Job",
+      decline_job: "Decline Job",
+      decline_assignment_prompt: "Why are you declining this job? (e.g. too far, vehicle broken down)",
+      decline_assignment_sent: "You've declined this job. Admin will be notified.",
+
+      // Driver: report issue
+      report_challenge: "Report Challenge",
+      report_challenge_prompt: "Describe the challenge you're facing (e.g. large load, long collection time):",
+      report_challenge_sent: "Your challenge report has been sent to admin.",
+
+      // Statuses
+      status_assigned: "Assigned (Awaiting Response)",
+      status_issue_reported: "Issue Reported",
+
+      // Admin: reports page
+      admin_reports_declined_title: "The previously assigned driver declined this job",
+      admin_reports_declined_hint: "Assign a different driver below.",
+      admin_reports_driver_issue_title: "Driver reported a challenge",
+      admin_reports_reassign_to: "Reassign to another driver",
+      admin_reports_confirm_reassign: "Confirm & Reassign",
+      admin_reports_pick_driver_first: "Please select a new driver first.",
       admin_contact_messages: "Contact Messages",
       admin_no_messages: "No messages yet",
       admin_dashboard_title: "Admin Dashboard",

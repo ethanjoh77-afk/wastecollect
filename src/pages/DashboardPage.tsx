@@ -212,6 +212,44 @@ function DriverDashboard() {
     loadReports();
   }
 
+  // ================= ACCEPT / DECLINE ASSIGNMENT =================
+  async function acceptAssignment(reportId: string) {
+    const { error } = await supabase.rpc('accept_report_assignment', {
+      p_report_id: reportId,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    loadReports();
+  }
+
+  async function declineAssignment(reportId: string) {
+    const note = window.prompt(
+      t(
+        'decline_assignment_prompt',
+        'Kwa nini unakataa kazi hii? (mfano: mbali sana, gari halifanyi kazi)'
+      )
+    );
+
+    if (!note || !note.trim()) return;
+
+    const { error } = await supabase.rpc('decline_report_assignment', {
+      p_report_id: reportId,
+      p_note: note.trim(),
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert(t('decline_assignment_sent', 'Umekataa kazi hii. Admin ataarifiwa.'));
+    loadReports();
+  }
+
   // ================= REPORT DRIVER ISSUE (Ripoti Changamoto) =================
   async function reportDriverIssue(reportId: string) {
     const note = window.prompt(
@@ -310,6 +348,28 @@ function DriverDashboard() {
                   <strong> {report.status.replaceAll("_", " ")}</strong>
                 </p>
 
+                {report.status === "assigned" && (
+                  <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 space-y-3">
+                    <p className="font-semibold text-blue-700">
+                      🆕 {t('new_assignment_title', 'Umepangiwa kazi mpya — kubali au kataa')}
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => acceptAssignment(report.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+                      >
+                        ✅ {t('accept_job', 'Kubali Kazi')}
+                      </button>
+                      <button
+                        onClick={() => declineAssignment(report.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
+                      >
+                        ❌ {t('decline_job', 'Kataa Kazi')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-4">
                   {report.status === "pending" && (
                     <button
@@ -335,7 +395,7 @@ function DriverDashboard() {
                     </span>
                   )}
 
-                  {report.status !== "resolved" && (
+                  {report.status !== "resolved" && report.status !== "assigned" && (
                     <button
                       onClick={() => reportDriverIssue(report.id)}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg"
