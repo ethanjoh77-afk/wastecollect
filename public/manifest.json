@@ -1,7 +1,7 @@
 {
   "name": "WasteCollect - Digital Waste Management",
   "short_name": "WasteCollect",
-  "description": "Smarter waste collection, cleaner cities. Real-time tracking, instant reporting, and seamless payments — built for Tanzania's municipalities.",
+  "description": "Smart waste management, real-time tracking, and seamless payments — for cities and municipalities everywhere.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

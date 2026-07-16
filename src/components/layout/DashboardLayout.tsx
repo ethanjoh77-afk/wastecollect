@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { BottomNavBar } from './BottomNavBar';
 import { useAuth } from '../../hooks/useAuth';
 
 interface DashboardLayoutProps {
@@ -28,10 +29,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
           {children}
         </main>
       </div>
+      <BottomNavBar />
     </div>
   );
 }

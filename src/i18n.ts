@@ -359,7 +359,7 @@ const resources = {
   en: {
     translation: {
       hero_title: "Smarter Waste Collection, Cleaner Cities",
-      hero_desc: "Real-time tracking, instant reporting, and seamless payments — built for Tanzania's municipalities.",
+      hero_desc: "Real-time tracking, instant reporting, and seamless payments — powering cleaner cities, wherever you are.",
       start_trial: "Start Free Trial",
 
       // Header
