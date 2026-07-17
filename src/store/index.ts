@@ -11,11 +11,17 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
+      sidebarOpen: false,
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
     }),
-    { name: 'app-store' }
+    {
+      name: 'app-store',
+      // sidebarOpen ni hali ya muda tu (transient UI state) — haipaswi
+      // kuhifadhiwa kwenye localStorage, la sivyo mtumiaji anaweza "kunasa"
+      // katika hali ya wazi (open) milele kwenye simu.
+      partialize: () => ({}),
+    }
   )
 );
 
