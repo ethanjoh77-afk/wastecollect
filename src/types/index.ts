@@ -67,6 +67,12 @@ export interface Company {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  subscription_plan?: 'trial' | 'standard' | 'professional' | 'enterprise';
+  subscription_status?: 'active' | 'past_due' | 'suspended' | 'cancelled';
+  trial_ends_at?: string;
+  billing_email?: string;
+  suspended_at?: string;
+  suspended_reason?: string;
 }
 
 export interface Ward {
@@ -368,4 +374,51 @@ export interface ChartData {
   name: string;
   value: number;
   [key: string]: string | number;
+}
+
+export interface SupportTicket {
+  id: string;
+  ticket_number: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  category: 'general' | 'technical' | 'billing' | 'complaint' | 'feature_request';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'assigned' | 'in_progress' | 'resolved' | 'closed';
+  assigned_department?: 'developer' | 'support' | 'finance' | 'operations' | 'manager';
+  assigned_to?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Activity {
+  id: string;
+  user_id?: string;
+  action: string;
+  description?: string;
+  metadata?: object;
+  created_at: string;
+}
+
+export interface SystemSetting {
+  key: string;
+  value: unknown;
+  description?: string;
+  updated_by?: string;
+  updated_at: string;
+}
+
+export interface PlatformStats {
+  totalCompanies: number;
+  totalCitizens: number;
+  totalDrivers: number;
+  totalAdmins: number;
+  totalRequests: number;
+  totalPayments: number;
+  totalRevenue: number;
+  pendingComplaints: number;
+  completedCollections: number;
+  activeVehicles: number;
+  onlineUsers: number;
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { updateTruckLocation } from "../lib/truckTrackingService";
 import { debounce } from "../lib/debounce";
 import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Users,
@@ -20,7 +20,6 @@ import { DashboardLayout } from "../components/layout";
 import {
   StatCard,
   QuickAction,
-  AreaChartCard,
   ActivityFeed,
 } from "../components/dashboard";
 
@@ -31,37 +30,21 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const role = user?.role;
 
+  // Super Admin ana dashibodi tofauti kabisa — mruhusu aende huko moja kwa moja
+  // kabla ya DashboardLayout ya kawaida kuonekana.
+  if (role === "super_admin") {
+    return <Navigate to="/admin/super/dashboard" replace />;
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {role === "super_admin" && <SuperAdminDashboard />}
         {role === "municipality_admin" && <MunicipalityDashboard />}
         {role === "company_admin" && <CompanyDashboard />}
         {role === "driver" && <DriverDashboard />}
         {(!role || role === "citizen") && <CitizenDashboard />}
       </div>
     </DashboardLayout>
-  );
-}
-
-// ================= SUPER ADMIN =================
-function SuperAdminDashboard() {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{t('super_admin_dashboard')}</h1>
-
-      <QuickAction
-        title={t('track_truck')}
-        icon={MapPin}
-        color="bg-secondary-500"
-      />
-
-      <AreaChartCard title={t('waste_collection_trend')} data={[]} />
-
-      <ActivityFeed />
-    </div>
   );
 }
 

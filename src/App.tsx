@@ -7,6 +7,9 @@ import { useAuth } from "./hooks/useAuth";
 import { SplashScreen } from "./components/common/SplashScreen";
 
 /* ================= LAZY PAGES ================= */
+const SuperAdminComingSoon = lazy(() =>
+  import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
+);
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./components/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./components/auth/RegisterPage"));
@@ -29,6 +32,8 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
 const AdminReportsPage = lazy(() => import("./pages/AdminReportsPage"));
+
+const SuperAdminDashboardPage = lazy(() => import("./pages/superadmin/SuperAdminDashboardPage"));
 
 /* ================= PROTECTED ROUTE ================= */
 function ProtectedRoute() {
@@ -125,6 +130,63 @@ function App() {
 
           <Route element={<AdminRoute roles={["super_admin", "municipality_admin"]} />}>
             <Route path="/admin/finance" element={<AdminFinancePage />} />
+          </Route>
+
+          {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}
+          <Route element={<AdminRoute roles={["super_admin"]} />}>
+            <Route path="/admin/super/dashboard" element={<SuperAdminDashboardPage />} />
+            <Route
+              path="/admin/super/companies"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_companies" phaseLabel="Awamu ya 2" />}
+            />
+            <Route
+              path="/admin/super/admins"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_admins" phaseLabel="Awamu ya 2" />}
+            />
+            <Route
+              path="/admin/super/users"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_users" phaseLabel="Awamu ya 3" />}
+            />
+            <Route
+              path="/admin/super/fleet"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_fleet" phaseLabel="Awamu ya 3" />}
+            />
+            <Route
+              path="/admin/super/support"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_support" phaseLabel="Awamu ya 4" />}
+            />
+            <Route
+              path="/admin/super/subscriptions"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_subscriptions" phaseLabel="Awamu ya 5" />}
+            />
+            <Route
+              path="/admin/super/analytics"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_analytics" phaseLabel="Awamu ya 5" />}
+            />
+            <Route
+              path="/admin/super/audit-logs"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_audit" phaseLabel="Awamu ya 5" />}
+            />
+            <Route
+              path="/admin/super/notifications"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_notifications" phaseLabel="Awamu ya 4" />}
+            />
+            <Route
+              path="/admin/super/ai-insights"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_ai" phaseLabel="Awamu ya 6" />}
+            />
+            <Route
+              path="/admin/super/live-monitoring"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_live" phaseLabel="Awamu ya 6" />}
+            />
+            <Route
+              path="/admin/super/security"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_security" phaseLabel="Awamu ya 6" />}
+            />
+            <Route
+              path="/admin/super/settings"
+              element={<SuperAdminComingSoon titleKey="superadmin_nav_settings" phaseLabel="Awamu ya 6" />}
+            />
           </Route>
 
           {/* FALLBACK */}
