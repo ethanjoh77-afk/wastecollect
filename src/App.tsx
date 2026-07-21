@@ -7,9 +7,6 @@ import { useAuth } from "./hooks/useAuth";
 import { SplashScreen } from "./components/common/SplashScreen";
 
 /* ================= LAZY PAGES ================= */
-const SuperAdminComingSoon = lazy(() =>
-  import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
-);
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./components/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./components/auth/RegisterPage"));
@@ -34,6 +31,9 @@ const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
 const AdminReportsPage = lazy(() => import("./pages/AdminReportsPage"));
 
 const SuperAdminDashboardPage = lazy(() => import("./pages/superadmin/SuperAdminDashboardPage"));
+const SuperAdminComingSoon = lazy(() =>
+  import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
+);
 
 /* ================= PROTECTED ROUTE ================= */
 function ProtectedRoute() {
