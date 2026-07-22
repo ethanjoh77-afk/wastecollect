@@ -31,6 +31,10 @@ const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
 const AdminReportsPage = lazy(() => import("./pages/AdminReportsPage"));
 
 const SuperAdminDashboardPage = lazy(() => import("./pages/superadmin/SuperAdminDashboardPage"));
+const CompaniesManagementPage = lazy(() => import("./pages/superadmin/CompaniesManagementPage"));
+const AdminManagementPage = lazy(() => import("./pages/superadmin/AdminManagementPage"));
+const UserManagementPage = lazy(() => import("./pages/superadmin/UserManagementPage"));
+const FleetManagementPage = lazy(() => import("./pages/superadmin/FleetManagementPage"));
 const SuperAdminComingSoon = lazy(() =>
   import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
 );
@@ -135,22 +139,10 @@ function App() {
           {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}
           <Route element={<AdminRoute roles={["super_admin"]} />}>
             <Route path="/admin/super/dashboard" element={<SuperAdminDashboardPage />} />
-            <Route
-              path="/admin/super/companies"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_companies" phaseLabel="Awamu ya 2" />}
-            />
-            <Route
-              path="/admin/super/admins"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_admins" phaseLabel="Awamu ya 2" />}
-            />
-            <Route
-              path="/admin/super/users"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_users" phaseLabel="Awamu ya 3" />}
-            />
-            <Route
-              path="/admin/super/fleet"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_fleet" phaseLabel="Awamu ya 3" />}
-            />
+            <Route path="/admin/super/companies" element={<CompaniesManagementPage />} />
+            <Route path="/admin/super/admins" element={<AdminManagementPage />} />
+            <Route path="/admin/super/users" element={<UserManagementPage />} />
+            <Route path="/admin/super/fleet" element={<FleetManagementPage />} />
             <Route
               path="/admin/super/support"
               element={<SuperAdminComingSoon titleKey="superadmin_nav_support" phaseLabel="Awamu ya 4" />}

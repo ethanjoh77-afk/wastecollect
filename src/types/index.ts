@@ -33,6 +33,8 @@ export interface User {
   is_active: boolean;
   is_verified: boolean;
   last_login?: string;
+  blocked_at?: string;
+  blocked_reason?: string;
   created_at: string;
   updated_at: string;
 }
