@@ -35,6 +35,8 @@ const CompaniesManagementPage = lazy(() => import("./pages/superadmin/CompaniesM
 const AdminManagementPage = lazy(() => import("./pages/superadmin/AdminManagementPage"));
 const UserManagementPage = lazy(() => import("./pages/superadmin/UserManagementPage"));
 const FleetManagementPage = lazy(() => import("./pages/superadmin/FleetManagementPage"));
+const SupportPage = lazy(() => import("./pages/superadmin/SupportPage"));
+const NotificationsPage = lazy(() => import("./pages/superadmin/NotificationsPage"));
 const SuperAdminComingSoon = lazy(() =>
   import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
 );
@@ -143,10 +145,7 @@ function App() {
             <Route path="/admin/super/admins" element={<AdminManagementPage />} />
             <Route path="/admin/super/users" element={<UserManagementPage />} />
             <Route path="/admin/super/fleet" element={<FleetManagementPage />} />
-            <Route
-              path="/admin/super/support"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_support" phaseLabel="Awamu ya 4" />}
-            />
+            <Route path="/admin/super/support" element={<SupportPage />} />
             <Route
               path="/admin/super/subscriptions"
               element={<SuperAdminComingSoon titleKey="superadmin_nav_subscriptions" phaseLabel="Awamu ya 5" />}
@@ -159,10 +158,7 @@ function App() {
               path="/admin/super/audit-logs"
               element={<SuperAdminComingSoon titleKey="superadmin_nav_audit" phaseLabel="Awamu ya 5" />}
             />
-            <Route
-              path="/admin/super/notifications"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_notifications" phaseLabel="Awamu ya 4" />}
-            />
+            <Route path="/admin/super/notifications" element={<NotificationsPage />} />
             <Route
               path="/admin/super/ai-insights"
               element={<SuperAdminComingSoon titleKey="superadmin_nav_ai" phaseLabel="Awamu ya 6" />}
