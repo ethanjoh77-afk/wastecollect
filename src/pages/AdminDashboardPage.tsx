@@ -1,5 +1,6 @@
 import TruckMap from "../components/maps/TruckMap";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Users,
@@ -25,6 +26,7 @@ interface ContactMessage {
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     users: 0,
     reports: 0,
@@ -87,7 +89,6 @@ export default function AdminDashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-secondary-900 dark:text-white">
             {t('admin_dashboard_title')}
@@ -98,11 +99,10 @@ export default function AdminDashboardPage() {
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
           <h2 className="text-2xl font-bold mb-4 text-secondary-900 dark:text-white">
-            🚛 {t('admin_live_truck_tracking')}
+            Truck Tracking - {t('admin_live_truck_tracking')}
           </h2>
           <TruckMap />
         </div>
-        {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <StatCard
             title={t('admin_stat_users')}
@@ -129,12 +129,11 @@ export default function AdminDashboardPage() {
             iconColor="bg-emerald-500"
           />
         </div>
-        {/* Map + Activity */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2">
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-4">
               <h2 className="text-xl font-bold mb-4 text-secondary-900 dark:text-white">
-                🗺️ {t('admin_live_waste_map')}
+                Waste Map - {t('admin_live_waste_map')}
               </h2>
               <ReportMap />
             </div>
@@ -142,25 +141,32 @@ export default function AdminDashboardPage() {
           <div>
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-4">
               <h2 className="text-xl font-bold mb-4 text-secondary-900 dark:text-white">
-                🔔 {t('admin_live_activities')}
+                Activities - {t('admin_live_activities')}
               </h2>
               <ActivityFeed />
             </div>
           </div>
         </div>
 
-        {/* Contact Messages */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
               <Mail className="w-5 h-5" />
               {t('admin_contact_messages')}
             </h2>
-            {messages.length > 0 && (
-              <span className="text-sm px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 font-medium">
-                {messages.length}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {messages.length > 0 && (
+                <span className="text-sm px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 font-medium">
+                  {messages.length}
+                </span>
+              )}
+              <button
+                onClick={() => navigate("/admin/support")}
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
+              >
+                {t('csm_view_all', 'Ona Zote')}
+              </button>
+            </div>
           </div>
 
           {loadingMessages ? (
@@ -182,10 +188,7 @@ export default function AdminDashboardPage() {
                       {new Date(msg.created_at).toLocaleString("sw-TZ")}
                     </span>
                   </div>
-                  <a
-                    href={`mailto:${msg.email}`}
-                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                  >
+                  <a href={`mailto:${msg.email}`} className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
                     {msg.email}
                   </a>
                   <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">

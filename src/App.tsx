@@ -7,6 +7,9 @@ import { useAuth } from "./hooks/useAuth";
 import { SplashScreen } from "./components/common/SplashScreen";
 
 /* ================= LAZY PAGES ================= */
+const AdminSupportPage = lazy(() => import("./pages/AdminSupportPage"));
+const ContactCenterPage = lazy(() => import("./pages/superadmin/ContactCenterPage"));
+
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./components/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./components/auth/RegisterPage"));
@@ -130,6 +133,7 @@ function App() {
           <Route element={<AdminRoute roles={["super_admin", "municipality_admin", "company_admin"]} />}>
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/reports" element={<AdminReportsPage />} />
+            <Route path="/admin/support" element={<AdminSupportPage />} />
             <Route
               path="/analytics"
               element={
@@ -145,6 +149,7 @@ function App() {
           </Route>
 
           {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}
+          <Route path="/admin/super/contact-center" element={<ContactCenterPage />} />
           <Route element={<AdminRoute roles={["super_admin"]} />}>
             <Route path="/admin/super/dashboard" element={<SuperAdminDashboardPage />} />
             <Route path="/admin/super/companies" element={<CompaniesManagementPage />} />

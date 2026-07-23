@@ -18,6 +18,7 @@ import {
   Radio,
   X,
   ShieldAlert,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAppStore } from '../../store';
@@ -35,6 +36,8 @@ const navItems: SuperAdminNavItem[] = [
   { labelKey: 'superadmin_nav_users', path: '/admin/super/users', icon: Users },
   { labelKey: 'superadmin_nav_fleet', path: '/admin/super/fleet', icon: Truck },
   { labelKey: 'superadmin_nav_support', path: '/admin/super/support', icon: LifeBuoy },
+  { labelKey: 'superadmin_nav_support', path: '/admin/super/support', icon: LifeBuoy },
+  { labelKey: 'superadmin_nav_contact_center', path: '/admin/super/contact-center', icon: Inbox },
   { labelKey: 'superadmin_nav_subscriptions', path: '/admin/super/subscriptions', icon: CreditCard },
   { labelKey: 'superadmin_nav_analytics', path: '/admin/super/analytics', icon: BarChart3 },
   { labelKey: 'superadmin_nav_audit', path: '/admin/super/audit-logs', icon: ScrollText },
