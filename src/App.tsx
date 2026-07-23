@@ -37,6 +37,12 @@ const UserManagementPage = lazy(() => import("./pages/superadmin/UserManagementP
 const FleetManagementPage = lazy(() => import("./pages/superadmin/FleetManagementPage"));
 const SupportPage = lazy(() => import("./pages/superadmin/SupportPage"));
 const NotificationsPage = lazy(() => import("./pages/superadmin/NotificationsPage"));
+const SubscriptionsPage = lazy(() => import("./pages/superadmin/SubscriptionsPage"));
+const AnalyticsPage = lazy(() => import("./pages/superadmin/AnalyticsPage"));
+const AuditLogsPage = lazy(() => import("./pages/superadmin/AuditLogsPage"));
+const LiveMonitoringPage = lazy(() => import("./pages/superadmin/LiveMonitoringPage"));
+const SecurityPage = lazy(() => import("./pages/superadmin/SecurityPage"));
+const SystemSettingsPage = lazy(() => import("./pages/superadmin/SystemSettingsPage"));
 const SuperAdminComingSoon = lazy(() =>
   import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
 );
@@ -146,35 +152,17 @@ function App() {
             <Route path="/admin/super/users" element={<UserManagementPage />} />
             <Route path="/admin/super/fleet" element={<FleetManagementPage />} />
             <Route path="/admin/super/support" element={<SupportPage />} />
-            <Route
-              path="/admin/super/subscriptions"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_subscriptions" phaseLabel="Awamu ya 5" />}
-            />
-            <Route
-              path="/admin/super/analytics"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_analytics" phaseLabel="Awamu ya 5" />}
-            />
-            <Route
-              path="/admin/super/audit-logs"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_audit" phaseLabel="Awamu ya 5" />}
-            />
+            <Route path="/admin/super/subscriptions" element={<SubscriptionsPage />} />
+            <Route path="/admin/super/analytics" element={<AnalyticsPage />} />
+            <Route path="/admin/super/audit-logs" element={<AuditLogsPage />} />
             <Route path="/admin/super/notifications" element={<NotificationsPage />} />
             <Route
               path="/admin/super/ai-insights"
               element={<SuperAdminComingSoon titleKey="superadmin_nav_ai" phaseLabel="Awamu ya 6" />}
             />
-            <Route
-              path="/admin/super/live-monitoring"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_live" phaseLabel="Awamu ya 6" />}
-            />
-            <Route
-              path="/admin/super/security"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_security" phaseLabel="Awamu ya 6" />}
-            />
-            <Route
-              path="/admin/super/settings"
-              element={<SuperAdminComingSoon titleKey="superadmin_nav_settings" phaseLabel="Awamu ya 6" />}
-            />
+            <Route path="/admin/super/live-monitoring" element={<LiveMonitoringPage />} />
+            <Route path="/admin/super/security" element={<SecurityPage />} />
+            <Route path="/admin/super/settings" element={<SystemSettingsPage />} />
           </Route>
 
           {/* FALLBACK */}
