@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ import {
   BarChart3,
   Recycle,
   MessageSquare,
+  Mail,
   X,
   Leaf,
 } from 'lucide-react';
@@ -26,19 +27,27 @@ interface NavItem {
   roles?: UserRole[];
 }
 
+const ADMIN_ROLES: UserRole[] = ['super_admin', 'municipality_admin', 'company_admin'];
+
 const navItems: NavItem[] = [
   { labelKey: 'nav_dashboard', path: '/dashboard', icon: LayoutDashboard },
   {
     labelKey: 'nav_reports',
     path: '/reports',
     icon: FileText,
-    roles: ['super_admin', 'municipality_admin', 'company_admin'],
+    roles: ADMIN_ROLES,
   },
   {
     labelKey: 'nav_analytics',
     path: '/analytics',
     icon: BarChart3,
-    roles: ['super_admin', 'municipality_admin', 'company_admin'],
+    roles: ADMIN_ROLES,
+  },
+  {
+    labelKey: 'csm_admin_title',
+    path: '/admin/support',
+    icon: Mail,
+    roles: ADMIN_ROLES,
   },
   { labelKey: 'nav_complaints', path: '/complaints', icon: MessageSquare },
   { labelKey: 'nav_payments', path: '/payments', icon: CreditCard },
@@ -49,9 +58,12 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { sidebarOpen, setSidebarOpen } = useAppStore();
+
+  const isAdmin = ADMIN_ROLES.includes(user?.role as UserRole);
 
   const filteredNavItems = navItems.filter(
     (item) => !item.roles || item.roles.includes(user?.role as UserRole)
@@ -65,6 +77,15 @@ export function Sidebar() {
       setSidebarOpen(false);
     }
   };
+
+  function handleGetSupport() {
+    if (isAdmin) {
+      navigate('/admin/support');
+      if (window.innerWidth < 1024) setSidebarOpen(false);
+    } else {
+      toast('Huduma ya msaada inakuja hivi karibuni', { icon: '🛠️' });
+    }
+  }
 
   return (
     <>
@@ -145,7 +166,7 @@ export function Sidebar() {
               {t('contact_support')}
             </p>
             <button
-              onClick={() => toast('Huduma ya msaada inakuja hivi karibuni', { icon: '🛠️' })}
+              onClick={handleGetSupport}
               className="mt-3 w-full py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors"
             >
               {t('get_support')}

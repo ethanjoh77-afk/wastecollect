@@ -149,9 +149,9 @@ function App() {
           </Route>
 
           {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}
-          <Route path="/admin/super/contact-center" element={<ContactCenterPage />} />
           <Route element={<AdminRoute roles={["super_admin"]} />}>
             <Route path="/admin/super/dashboard" element={<SuperAdminDashboardPage />} />
+            <Route path="/admin/super/contact-center" element={<ContactCenterPage />} />
             <Route path="/admin/super/companies" element={<CompaniesManagementPage />} />
             <Route path="/admin/super/admins" element={<AdminManagementPage />} />
             <Route path="/admin/super/users" element={<UserManagementPage />} />
