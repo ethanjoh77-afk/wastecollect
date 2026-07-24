@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 export interface MonthPoint {
   name: string;
   value: number;
+  [key: string]: string | number;
 }
 
 export interface PlatformOverview {

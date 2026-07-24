@@ -28,6 +28,9 @@ const TrackTruckPage = lazy(() => import("./pages/TrackTruckPage"));
 const PickupRequestPage = lazy(() => import("./pages/PickupRequestPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SchedulesPage = lazy(() => import("./pages/SchedulesPage"));
+const RecyclingPage = lazy(() => import("./pages/RecyclingPage"));
+const AdminAnalyticsPage = lazy(() => import("./pages/AdminAnalyticsPage"));
 
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
@@ -109,24 +112,9 @@ function App() {
             <Route path="/pickup-request" element={<PickupRequestPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/schedules" element={<SchedulesPage />} />
 
-            {/* Placeholders — zinaonyesha ukurasa badala ya kurudi home */}
-            <Route
-              path="/schedules"
-              element={
-                <div className="flex items-center justify-center min-h-screen text-gray-400 text-xl">
-                  🗓️ Schedules — Coming Soon
-                </div>
-              }
-            />
-            <Route
-              path="/recycling"
-              element={
-                <div className="flex items-center justify-center min-h-screen text-gray-400 text-xl">
-                  ♻️ Recycling — Coming Soon
-                </div>
-              }
-            />
+            <Route path="/recycling" element={<RecyclingPage />} />
           </Route>
 
           {/* ADMIN ONLY */}
@@ -134,14 +122,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/reports" element={<AdminReportsPage />} />
             <Route path="/admin/support" element={<AdminSupportPage />} />
-            <Route
-              path="/analytics"
-              element={
-                <div className="flex items-center justify-center min-h-screen text-gray-400 text-xl">
-                  📊 Analytics — Coming Soon
-                </div>
-              }
-            />
+            <Route path="/analytics" element={<AdminAnalyticsPage />} />
           </Route>
 
           <Route element={<AdminRoute roles={["super_admin", "municipality_admin"]} />}>
