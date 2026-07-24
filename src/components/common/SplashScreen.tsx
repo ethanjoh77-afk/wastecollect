@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Recycle } from "lucide-react";
+import logo from "../../assets/logo.png";
 
 export function SplashScreen() {
   return (
@@ -15,8 +15,8 @@ export function SplashScreen() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col items-center gap-4"
       >
-        <div className="w-20 h-20 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-xl">
-          <Recycle className="w-11 h-11 text-white" strokeWidth={2.2} />
+        <div className="w-20 h-20 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-xl p-3">
+          <img src={logo} alt="WasteCollect" className="w-full h-full object-contain" />
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">

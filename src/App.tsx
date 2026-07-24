@@ -5,6 +5,7 @@ import { PaymentListener } from "./components/PaymentListener";
 import { AdminRoute } from "./components/AdminRoute";
 import { useAuth } from "./hooks/useAuth";
 import { SplashScreen } from "./components/common/SplashScreen";
+import logo from "./assets/logo.png";
 
 /* ================= LAZY PAGES ================= */
 const AdminSupportPage = lazy(() => import("./pages/AdminSupportPage"));
@@ -53,6 +54,32 @@ const SuperAdminComingSoon = lazy(() =>
   import("./components/superadmin/ComingSoon").then((m) => ({ default: m.SuperAdminComingSoon }))
 );
 
+/* ================= DELAYED SUSPENSE FALLBACK ================= */
+/* Haionyeshi chochote mpaka route ichukue zaidi ya 300ms kupakia,
+   kuepuka "kumeta-meta" kwa lazy-loads za haraka. */
+const SUSPENSE_SPINNER_DELAY_MS = 300;
+
+function DelayedRouteFallback() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), SUSPENSE_SPINNER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <img
+        src={logo}
+        alt="Inapakia..."
+        className="w-14 h-14 animate-spin"
+      />
+    </div>
+  );
+}
+
 /* ================= PROTECTED ROUTE ================= */
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -83,13 +110,7 @@ function App() {
       </AnimatePresence>
 
       <PaymentListener />
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            Loading...
-          </div>
-        }
-      >
+      <Suspense fallback={<DelayedRouteFallback />}>
         <Routes>
           {/* PUBLIC */}
           <Route path="/" element={<LandingPage />} />

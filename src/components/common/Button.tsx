@@ -1,7 +1,9 @@
-import { ReactNode, ButtonHTMLAttributes } from 'react';
+import { ReactNode, ButtonHTMLAttributes, useEffect, useState } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
-import { Loader2 } from 'lucide-react';
+import logo from '../../assets/logo.png';
+
+const SPINNER_DELAY_MS = 300;
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl',
@@ -55,13 +57,26 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const [showSpinner, setShowSpinner] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setShowSpinner(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSpinner(true), SPINNER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
   return (
     <button
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+      {showSpinner && (
+        <img src={logo} alt="" className="w-4 h-4 animate-spin" />
+      )}
       {!isLoading && leftIcon}
       {children}
       {!isLoading && rightIcon}
