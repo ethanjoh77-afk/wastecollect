@@ -24,7 +24,7 @@ export default function Stats() {
             key={i}
             className="p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 text-center"
           >
-            <div className="text-3xl md:text-4xl font-extrabold text-white mb-1">
+            <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-1">
               {loading ? t("stat_loading") : formatNumber(item.value)}
             </div>
             <div className="text-sm text-white/60">{item.label}</div>

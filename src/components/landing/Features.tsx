@@ -27,7 +27,7 @@ export default function Features() {
   return (
     <section className="px-6 py-14">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-5xl font-extrabold text-center text-white drop-shadow-lg mb-12">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-white drop-shadow-lg mb-12">
           {t("features_title")}
         </h2>
 

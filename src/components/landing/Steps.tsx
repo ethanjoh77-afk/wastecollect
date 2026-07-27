@@ -8,7 +8,7 @@ export default function Steps() {
   return (
     <section className="px-6 py-16 bg-black/30 backdrop-blur-md rounded-3xl border border-white/10">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-4xl font-bold text-center text-white mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-white mb-12">
           {t("how_it_works_title")}
         </h2>
 

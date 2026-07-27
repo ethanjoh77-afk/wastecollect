@@ -41,7 +41,7 @@ export default function DeveloperModal({
               className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-green-500"
             />
 
-            <h2 className="mt-5 text-3xl font-bold text-center text-white">
+            <h2 className="mt-5 text-2xl sm:text-3xl font-bold text-center text-white">
               Joshua J Nasta
             </h2>
 

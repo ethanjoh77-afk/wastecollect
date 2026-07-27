@@ -7,7 +7,7 @@ export default function Partners() {
   return (
     <section className="px-6 py-16">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-white drop-shadow-xl mb-12">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-white drop-shadow-xl mb-12">
           {t("partners_title")}
         </h2>
 
