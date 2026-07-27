@@ -38,6 +38,7 @@ const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
 const AdminReportsPage = lazy(() => import("./pages/AdminReportsPage"));
 
 const SuperAdminDashboardPage = lazy(() => import("./pages/superadmin/SuperAdminDashboardPage"));
+const AdminLandingCMS = lazy(() => import("./pages/AdminLandingCMS"));
 const CompaniesManagementPage = lazy(() => import("./pages/superadmin/CompaniesManagementPage"));
 const AdminManagementPage = lazy(() => import("./pages/superadmin/AdminManagementPage"));
 const UserManagementPage = lazy(() => import("./pages/superadmin/UserManagementPage"));
@@ -153,6 +154,7 @@ function App() {
           {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}
           <Route element={<AdminRoute roles={["super_admin"]} />}>
             <Route path="/admin/super/dashboard" element={<SuperAdminDashboardPage />} />
+            <Route path="/admin/super/landing-cms" element={<AdminLandingCMS />} />
             <Route path="/admin/super/contact-center" element={<ContactCenterPage />} />
             <Route path="/admin/super/companies" element={<CompaniesManagementPage />} />
             <Route path="/admin/super/admins" element={<AdminManagementPage />} />

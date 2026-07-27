@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Inbox, Search, StickyNote, UserPlus, Archive, Download, Mail } from "lucide-react";
 import { SuperAdminLayout } from "../../components/layout/SuperAdminLayout";
 import { Input, Select, Modal, Textarea, Button, Badge } from "../../components/common";
+import { supabase } from "../../lib/supabase";
 import {
   getForwardedMessages,
   addInternalNote,
@@ -69,6 +70,28 @@ export default function ContactCenterPage() {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter]);
+
+  // Ref inayoshikilia loadMessages ya sasa, ili channel isipate stale closure.
+  const loadMessagesRef = useRef(loadMessages);
+  loadMessagesRef.current = loadMessages;
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("contact_messages-super-admin")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_messages" },
+        () => {
+          loadMessagesRef.current();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function openMessage(msg: ContactMessageEntry) {
     setActiveMsg(msg);

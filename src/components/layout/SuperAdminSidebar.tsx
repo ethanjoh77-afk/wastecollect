@@ -19,6 +19,7 @@ import {
   X,
   ShieldAlert,
   Inbox,
+  Image,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAppStore } from '../../store';
@@ -31,6 +32,7 @@ interface SuperAdminNavItem {
 
 const navItems: SuperAdminNavItem[] = [
   { labelKey: 'superadmin_nav_dashboard', path: '/admin/super/dashboard', icon: LayoutDashboard },
+  { labelKey: 'superadmin_nav_landing_cms', path: '/admin/super/landing-cms', icon: Image },
   { labelKey: 'superadmin_nav_companies', path: '/admin/super/companies', icon: Building2 },
   { labelKey: 'superadmin_nav_admins', path: '/admin/super/admins', icon: UserCog },
   { labelKey: 'superadmin_nav_users', path: '/admin/super/users', icon: Users },

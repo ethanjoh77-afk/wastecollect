@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Mail, Search, Send, Forward, CheckCircle2, Archive, Trash2, Clock } from "lucide-react";
 import { DashboardLayout } from "../components/layout";
 import { Input, Select, Modal, Textarea, Button, Badge, ConfirmDialog } from "../components/common";
+import { supabase } from "../lib/supabase";
 import {
   getAdminMessages,
   markUnderReview,
@@ -71,6 +72,28 @@ export default function AdminSupportPage() {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter, priorityFilter, sort]);
+
+  // Ref inayoshikilia loadMessages ya sasa, ili channel isipate stale closure.
+  const loadMessagesRef = useRef(loadMessages);
+  loadMessagesRef.current = loadMessages;
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("contact_messages-admin")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_messages" },
+        () => {
+          loadMessagesRef.current();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleOpen(msg: ContactMessageEntry) {
     if (msg.status === "NEW") {
