@@ -30,6 +30,7 @@ const roleOptions: { value: UserRole | ''; label: string }[] = [
 const roleBadgeVariant: Record<UserRole, 'primary' | 'success' | 'warning' | 'error' | 'default'> = {
   citizen: 'default',
   driver: 'primary',
+  collector: 'primary',
   company_admin: 'warning',
   municipality_admin: 'success',
   super_admin: 'error',

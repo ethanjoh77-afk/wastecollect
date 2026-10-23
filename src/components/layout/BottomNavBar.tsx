@@ -9,7 +9,9 @@ export function BottomNavBar() {
   const { hasRole } = useAuth();
   const { toggleSidebar } = useAppStore();
 
-  const homePath = hasRole(["super_admin", "municipality_admin", "company_admin"])
+  const homePath = hasRole(["collector"])
+    ? "/collect"
+    : hasRole(["super_admin", "municipality_admin", "company_admin"])
     ? "/admin/dashboard"
     : "/dashboard";
 

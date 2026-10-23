@@ -61,7 +61,11 @@ export default function TruckMap() {
       return;
     }
 
-    setTrucks(data ?? []);
+    const normalized: TruckLocation[] = (data ?? []).map((row: any) => ({
+      ...row,
+      users: Array.isArray(row.users) ? row.users[0] ?? null : row.users,
+    }));
+    setTrucks(normalized);
   }
 
   // debounce inaundwa mara moja tu, si kwenye kila render

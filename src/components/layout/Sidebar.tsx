@@ -14,6 +14,12 @@ import {
   Mail,
   X,
   Leaf,
+  Fuel,
+  ScanLine,
+  Map as MapIcon,
+  PlusCircle,
+  Wallet,
+  HandCoins,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
@@ -28,6 +34,7 @@ interface NavItem {
 }
 
 const ADMIN_ROLES: UserRole[] = ['super_admin', 'municipality_admin', 'company_admin'];
+const COLLECT_ROLES: UserRole[] = ['collector', 'company_admin', 'super_admin'];
 
 const navItems: NavItem[] = [
   { labelKey: 'nav_dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -44,11 +51,22 @@ const navItems: NavItem[] = [
     roles: ADMIN_ROLES,
   },
   {
+    labelKey: 'nav_operational_kpis',
+    path: '/operational-kpis',
+    icon: Fuel,
+    roles: ADMIN_ROLES,
+  },
+  {
     labelKey: 'csm_admin_title',
     path: '/admin/support',
     icon: Mail,
     roles: ADMIN_ROLES,
   },
+  { labelKey: 'nav_collect_home', path: '/collect', icon: ScanLine, roles: COLLECT_ROLES },
+  { labelKey: 'nav_collect_map', path: '/collect/map', icon: MapIcon, roles: COLLECT_ROLES },
+  { labelKey: 'nav_collect_register', path: '/collect/register', icon: PlusCircle, roles: COLLECT_ROLES },
+  { labelKey: 'nav_collect_shift', path: '/collect/shift', icon: Wallet, roles: ['collector'] },
+  { labelKey: 'nav_collect_admin', path: '/collect/admin', icon: HandCoins, roles: ['company_admin', 'super_admin'] },
   { labelKey: 'nav_complaints', path: '/complaints', icon: MessageSquare },
   { labelKey: 'nav_payments', path: '/payments', icon: CreditCard },
   { labelKey: 'nav_schedules', path: '/schedules', icon: Calendar },
@@ -65,9 +83,13 @@ export function Sidebar() {
 
   const isAdmin = ADMIN_ROLES.includes(user?.role as UserRole);
 
-  const filteredNavItems = navItems.filter(
-    (item) => !item.roles || item.roles.includes(user?.role as UserRole)
-  );
+  const filteredNavItems = navItems.filter((item) => {
+    // Mkusanyaji anaona menyu ya ukusanyaji tu (+ mipangilio)
+    if (user?.role === 'collector') {
+      return item.roles?.includes('collector') || item.path === '/settings';
+    }
+    return !item.roles || item.roles.includes(user?.role as UserRole);
+  });
 
   // Funga sidebar KWA SIMU PEKEE (screen < 1024px). Kwenye kompyuta, sidebar
   // inabaki wazi daima kwa sababu inaonyeshwa kupitia CSS (lg:relative lg:translate-x-0),

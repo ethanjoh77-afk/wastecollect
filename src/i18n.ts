@@ -612,9 +612,15 @@ const resources = {
 
       // Sidebar
       nav_dashboard: "Dashibodi",
+      nav_collect_home: "Kukusanya ada",
+      nav_collect_map: "Ramani ya kaya",
+      nav_collect_register: "Sajili nyumba",
+      nav_collect_shift: "Funga siku",
+      nav_collect_admin: "Ukusanyaji (admin)",
       nav_reports: "Ripoti",
       nav_ai_hotspots: "AI Hotspots",
       nav_analytics: "Uchambuzi",
+      nav_operational_kpis: "Gharama & GPS",
       nav_complaints: "Malalamiko",
       nav_payments: "Malipo",
       nav_schedules: "Ratiba",
@@ -1431,9 +1437,15 @@ const resources = {
 
       // Sidebar
       nav_dashboard: "Dashboard",
+      nav_collect_home: "Collect fees",
+      nav_collect_map: "Household map",
+      nav_collect_register: "Register property",
+      nav_collect_shift: "Close day",
+      nav_collect_admin: "Collections (admin)",
       nav_reports: "Reports",
       nav_ai_hotspots: "AI Hotspots",
       nav_analytics: "Analytics",
+      nav_operational_kpis: "Cost & GPS",
       nav_complaints: "Complaints",
       nav_payments: "Payments",
       nav_schedules: "Schedules",

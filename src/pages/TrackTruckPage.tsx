@@ -40,7 +40,11 @@ export default function TrackTruckPage() {
       console.error("Imeshindikana kupata magari:", error);
       setVehicles([]);
     } else {
-      setVehicles(data ?? []);
+      const normalized: VehicleWithDriver[] = (data ?? []).map((row: any) => ({
+        ...row,
+        users: Array.isArray(row.users) ? row.users[0] ?? null : row.users,
+      }));
+      setVehicles(normalized);
     }
     setLoading(false);
   }

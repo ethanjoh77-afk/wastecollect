@@ -36,6 +36,11 @@ export default function DashboardPage() {
     return <Navigate to="/admin/super/dashboard" replace />;
   }
 
+  // Mkusanyaji ana skrini yake ya kazi (kukusanya ada kwa kaya)
+  if (role === "collector") {
+    return <Navigate to="/collect" replace />;
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">

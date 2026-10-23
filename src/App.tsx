@@ -31,11 +31,21 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SchedulesPage = lazy(() => import("./pages/SchedulesPage"));
 const RecyclingPage = lazy(() => import("./pages/RecyclingPage"));
+const OperationalKpisPage = lazy(() => import("./pages/OperationalKpisPage"));
 const AdminAnalyticsPage = lazy(() => import("./pages/AdminAnalyticsPage"));
 
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminFinancePage = lazy(() => import("./pages/AdminFinancePage"));
 const AdminReportsPage = lazy(() => import("./pages/AdminReportsPage"));
+
+const CollectorHomePage = lazy(() => import("./pages/collection/CollectorHomePage"));
+const UnitPaymentPage = lazy(() => import("./pages/collection/UnitPaymentPage"));
+const CollectionMapPage = lazy(() => import("./pages/collection/CollectionMapPage"));
+const RegisterPropertyPage = lazy(() => import("./pages/collection/RegisterPropertyPage"));
+const PropertyDetailPage = lazy(() => import("./pages/collection/PropertyDetailPage"));
+const ShiftPage = lazy(() => import("./pages/collection/ShiftPage"));
+const AdminCollectionPage = lazy(() => import("./pages/collection/AdminCollectionPage"));
+const AdminCollectionSetupPage = lazy(() => import("./pages/collection/AdminCollectionSetupPage"));
 
 const SuperAdminDashboardPage = lazy(() => import("./pages/superadmin/SuperAdminDashboardPage"));
 const AdminLandingCMS = lazy(() => import("./pages/AdminLandingCMS"));
@@ -145,10 +155,26 @@ function App() {
             <Route path="/reports" element={<AdminReportsPage />} />
             <Route path="/admin/support" element={<AdminSupportPage />} />
             <Route path="/analytics" element={<AdminAnalyticsPage />} />
+            <Route path="/operational-kpis" element={<OperationalKpisPage />} />
           </Route>
 
           <Route element={<AdminRoute roles={["super_admin", "municipality_admin"]} />}>
             <Route path="/admin/finance" element={<AdminFinancePage />} />
+          </Route>
+
+          {/* UKUSANYAJI WA ADA (kaya/vichwa) — mkusanyaji + admin wa kampuni + super admin */}
+          <Route element={<AdminRoute roles={["collector", "company_admin", "super_admin"]} />}>
+            <Route path="/collect" element={<CollectorHomePage />} />
+            <Route path="/collect/unit/:code" element={<UnitPaymentPage />} />
+            <Route path="/collect/map" element={<CollectionMapPage />} />
+            <Route path="/collect/register" element={<RegisterPropertyPage />} />
+            <Route path="/collect/property/:id" element={<PropertyDetailPage />} />
+            <Route path="/collect/shift" element={<ShiftPage />} />
+          </Route>
+
+          <Route element={<AdminRoute roles={["company_admin", "super_admin"]} />}>
+            <Route path="/collect/admin" element={<AdminCollectionPage />} />
+            <Route path="/collect/admin/setup" element={<AdminCollectionSetupPage />} />
           </Route>
 
           {/* SUPER ADMIN ONLY — dashibodi tofauti kabisa, si sehemu ya company/municipality admin */}

@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'municipality_admin' | 'company_admin' | 'driver' | 'citizen';
+export type UserRole = 'super_admin' | 'municipality_admin' | 'company_admin' | 'driver' | 'citizen' | 'collector';
 
 export type VehicleStatus = 'available' | 'on_route' | 'maintenance' | 'inactive';
 
