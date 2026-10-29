@@ -4,7 +4,7 @@ import { getUserPayments } from "../lib/paymentService";
 
 type Payment = {
   id: string;
-  receipt_number: string;
+  receipt_number?: string;
   amount: number;
   payment_method: string;
   status: string;

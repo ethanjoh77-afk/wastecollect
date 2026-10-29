@@ -185,6 +185,8 @@ export interface RegisterUnitInput {
     phone?: string;
     household_size?: number | null;
   } | null;
+  /** Deni la nyuma na alichokwisha lipa (huwekwa kupitia ledger baada ya usajili). */
+  opening?: { debt: number; paid: number } | null;
 }
 
 export interface RegisterPropertyInput {

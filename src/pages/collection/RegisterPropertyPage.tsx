@@ -35,6 +35,8 @@ interface DraftUnit {
   size: string;
   vacant: boolean;
   feePlanId: string;
+  debt: string;
+  paid: string;
 }
 
 const emptyUnit = (label = ''): DraftUnit => ({
@@ -45,6 +47,8 @@ const emptyUnit = (label = ''): DraftUnit => ({
   size: '',
   vacant: false,
   feePlanId: '',
+  debt: '',
+  paid: '',
 });
 
 const WARDS_CACHE = 'wc_wards_cache';
@@ -78,6 +82,8 @@ export default function RegisterPropertyPage() {
   const [address, setAddress] = useState('');
   const [totalRooms, setTotalRooms] = useState('');
   const [familySize, setFamilySize] = useState('');
+  const [ownerDebt, setOwnerDebt] = useState('');
+  const [ownerPaid, setOwnerPaid] = useState('');
 
   const [gps, setGps] = useState<{ lat: number; lng: number; accuracy: number | null } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -161,6 +167,12 @@ export default function RegisterPropertyPage() {
     return businesses.length;
   }, [type, tenants, landlordUses, businesses]);
 
+  const opening = (debt: string, paid: string) => {
+    const d = Number(debt) || 0;
+    const p = Number(paid) || 0;
+    return d > 0 || p > 0 ? { debt: d, paid: p } : null;
+  };
+
   function buildUnits(): RegisterUnitInput[] | string {
     const occupant = (name: string, phone: string, size: string) =>
       name.trim()
@@ -174,6 +186,7 @@ export default function RegisterPropertyPage() {
           unit_type: 'family',
           label: 'Nyumba',
           occupant: occupant(ownerName, ownerPhone, familySize),
+          opening: opening(ownerDebt, ownerPaid),
         },
       ];
     }
@@ -186,6 +199,7 @@ export default function RegisterPropertyPage() {
           unit_type: 'tenant',
           label: t.label.trim() || `Chumba ${i + 1}`,
           occupant: t.vacant ? null : occupant(t.name, t.phone, t.size),
+          opening: t.vacant ? null : opening(t.debt, t.paid),
         });
       }
       if (landlordUses) {
@@ -194,6 +208,7 @@ export default function RegisterPropertyPage() {
           unit_type: 'landlord',
           label: 'Vyumba vya mwenye nyumba',
           occupant: occupant(ownerName, ownerPhone, familySize),
+          opening: opening(ownerDebt, ownerPaid),
         });
       }
       if (units.length === 0) return 'Ongeza angalau chumba kimoja.';
@@ -208,6 +223,7 @@ export default function RegisterPropertyPage() {
         label: b.label.trim(),
         fee_plan_id: b.feePlanId || null,
         occupant: occupant(b.name || b.label, b.phone, ''),
+        opening: opening(b.debt, b.paid),
       });
     }
     return units;
@@ -259,6 +275,8 @@ export default function RegisterPropertyPage() {
     setAddress('');
     setTotalRooms('');
     setFamilySize('');
+    setOwnerDebt('');
+    setOwnerPaid('');
     setGps(null);
     setTenants([emptyUnit('Chumba 1')]);
     setBusinesses([emptyUnit('')]);
@@ -408,6 +426,12 @@ export default function RegisterPropertyPage() {
                 onChange={(e) => setFamilySize(e.target.value)}
               />
             )}
+            {(type === 'family' || (type === 'multi_tenant' && landlordUses)) && (
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="Deni la nyuma (TZS)" type="number" min={0} value={ownerDebt} onChange={(e) => setOwnerDebt(e.target.value)} />
+                <Input label="Alishalipa (TZS)" type="number" min={0} value={ownerPaid} onChange={(e) => setOwnerPaid(e.target.value)} />
+              </div>
+            )}
             {type === 'multi_tenant' && (
               <>
                 <Input
@@ -481,6 +505,22 @@ export default function RegisterPropertyPage() {
                           onChange={(e) => setTenants(tenants.map((x) => (x.key === t.key ? { ...x, size: e.target.value } : x)))}
                         />
                       </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Deni la nyuma"
+                          type="number"
+                          min={0}
+                          value={t.debt}
+                          onChange={(e) => setTenants(tenants.map((x) => (x.key === t.key ? { ...x, debt: e.target.value } : x)))}
+                        />
+                        <Input
+                          placeholder="Alishalipa"
+                          type="number"
+                          min={0}
+                          value={t.paid}
+                          onChange={(e) => setTenants(tenants.map((x) => (x.key === t.key ? { ...x, paid: e.target.value } : x)))}
+                        />
+                      </div>
                     </>
                   )}
                 </div>
@@ -532,6 +572,22 @@ export default function RegisterPropertyPage() {
                       type="tel"
                       value={b.phone}
                       onChange={(e) => setBusinesses(businesses.map((x) => (x.key === b.key ? { ...x, phone: e.target.value } : x)))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder="Deni la nyuma"
+                      type="number"
+                      min={0}
+                      value={b.debt}
+                      onChange={(e) => setBusinesses(businesses.map((x) => (x.key === b.key ? { ...x, debt: e.target.value } : x)))}
+                    />
+                    <Input
+                      placeholder="Alishalipa"
+                      type="number"
+                      min={0}
+                      value={b.paid}
+                      onChange={(e) => setBusinesses(businesses.map((x) => (x.key === b.key ? { ...x, paid: e.target.value } : x)))}
                     />
                   </div>
                   {businessPlans.length > 0 && (

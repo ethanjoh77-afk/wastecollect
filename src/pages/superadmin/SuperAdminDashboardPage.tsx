@@ -5,7 +5,6 @@ import {
   Truck,
   UserCog,
   FileText,
-  Wallet,
   AlertCircle,
   CheckCircle2,
   Activity as ActivityIcon,
@@ -87,18 +86,12 @@ export default function SuperAdminDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           <StatCard
             title={t('superadmin_stat_requests')}
             value={loading ? '...' : stats.totalRequests}
             icon={FileText}
             iconColor="bg-orange-500"
-          />
-          <StatCard
-            title={t('superadmin_stat_revenue')}
-            value={loading ? '...' : `TZS ${stats.totalRevenue.toLocaleString()}`}
-            icon={Wallet}
-            iconColor="bg-emerald-500"
           />
           <StatCard
             title={t('superadmin_stat_pending_complaints')}
@@ -114,7 +107,7 @@ export default function SuperAdminDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           <StatCard
             title={t('superadmin_stat_active_vehicles')}
             value={loading ? '...' : stats.activeVehicles}
@@ -126,12 +119,6 @@ export default function SuperAdminDashboardPage() {
             value={loading ? '...' : stats.onlineUsers}
             icon={ActivityIcon}
             iconColor="bg-indigo-500"
-          />
-          <StatCard
-            title={t('superadmin_stat_payments')}
-            value={loading ? '...' : stats.totalPayments}
-            icon={Wallet}
-            iconColor="bg-lime-500"
           />
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center gap-2">
             <Circle className={`w-3 h-3 ${healthColor} fill-current`} />

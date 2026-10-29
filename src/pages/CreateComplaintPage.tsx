@@ -6,7 +6,7 @@ import { Select } from "../components/common/Select";
 import { Textarea } from "../components/common/Textarea";
 
 export default function CreateComplaintPage() {
-  const { createComplaint } = useComplaints();
+  useComplaints();
 
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");

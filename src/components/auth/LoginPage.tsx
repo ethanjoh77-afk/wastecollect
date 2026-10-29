@@ -176,6 +176,13 @@ export function LoginPage() {
                 {t('login_sign_up')}
               </Link>
             </p>
+
+            <Link
+              to="/demo"
+              className="mt-4 block w-full text-center py-3 rounded-xl border border-primary-300 text-primary-700 dark:text-primary-300 dark:border-slate-600 font-medium hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Tazama Demo (bila kuingia)
+            </Link>
           </motion.div>
         </div>
       </div>

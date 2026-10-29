@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, QrCode } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/layout';
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, Input, Modal, Select } from '../../components/common';
 import { PayStatusBadge, money } from '../../components/collection/PayStatusBadge';
 import { StickerSheet } from '../../components/collection/StickerSheet';
-import { addUnitToProperty, getProperty, listPropertyUnits, type PropertyRow } from '../../services/collectionService';
+import { addUnitToProperty, getProperty, listPropertyUnits, updatePropertyInfo, type PropertyRow } from '../../services/collectionService';
 import {
   PROPERTY_TYPE_LABEL,
   UNIT_TYPE_LABEL,
@@ -28,6 +28,8 @@ export default function PropertyDetailPage() {
   const [units, setUnits] = useState<UnitStatusRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showStickers, setShowStickers] = useState(false);
+
+  const [editForm, setEditForm] = useState<{ owner_name: string; owner_phone: string; total_rooms: string; address: string } | null>(null);
 
   const [showAdd, setShowAdd] = useState(false);
   const [addType, setAddType] = useState<UnitType>('tenant');
@@ -75,6 +77,26 @@ export default function PropertyDetailPage() {
     }
   }
 
+  async function handleSaveProperty() {
+    if (!property || !editForm) return;
+    try {
+      await updatePropertyInfo({
+        propertyId: property.id,
+        ownerName: editForm.owner_name,
+        ownerPhone: editForm.owner_phone,
+        totalRooms: editForm.total_rooms ? Number(editForm.total_rooms) : null,
+        address: editForm.address,
+        lat: property.location_lat,
+        lng: property.location_lng,
+      });
+      toast.success('Taarifa za nyumba zimehifadhiwa.');
+      setEditForm(null);
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   const totalDebt = units.reduce((s, u) => s + Math.max(u.balance ?? 0, 0), 0);
 
   return (
@@ -92,7 +114,24 @@ export default function PropertyDetailPage() {
           <>
             <Card>
               <CardContent className="p-5 space-y-1">
-                <h1 className="text-xl font-bold">{property.owner_name || 'Nyumba'}</h1>
+                <div className="flex items-start justify-between gap-2">
+                  <h1 className="text-xl font-bold">{property.owner_name || 'Nyumba'}</h1>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Pencil className="w-4 h-4" />}
+                    onClick={() =>
+                      setEditForm({
+                        owner_name: property.owner_name ?? '',
+                        owner_phone: property.owner_phone ?? '',
+                        total_rooms: property.total_rooms ? String(property.total_rooms) : '',
+                        address: property.address ?? '',
+                      })
+                    }
+                  >
+                    Hariri
+                  </Button>
+                </div>
                 <p className="text-sm text-secondary-500">
                   {PROPERTY_TYPE_LABEL[property.property_type]}
                   {property.address ? ` • ${property.address}` : ''}
@@ -156,6 +195,20 @@ export default function PropertyDetailPage() {
           </>
         )}
       </div>
+
+      <Modal isOpen={!!editForm} onClose={() => setEditForm(null)} title="Hariri taarifa za nyumba">
+        {editForm && (
+          <div className="space-y-3">
+            <Input label="Jina la mmiliki / mkuu wa kaya" value={editForm.owner_name} onChange={(e) => setEditForm({ ...editForm, owner_name: e.target.value })} />
+            <Input label="Simu" type="tel" value={editForm.owner_phone} onChange={(e) => setEditForm({ ...editForm, owner_phone: e.target.value })} />
+            <Input label="Jumla ya vyumba (taarifa tu)" type="number" min={0} value={editForm.total_rooms} onChange={(e) => setEditForm({ ...editForm, total_rooms: e.target.value })} />
+            <Input label="Anwani / maelezo ya eneo" value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} />
+            <Button className="w-full" onClick={handleSaveProperty}>
+              Hifadhi
+            </Button>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title="Ongeza kichwa">
         <div className="space-y-3">

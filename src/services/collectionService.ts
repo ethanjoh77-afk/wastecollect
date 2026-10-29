@@ -208,7 +208,25 @@ export async function registerProperty(input: RegisterPropertyInput): Promise<Re
     p_units: input.units,
   });
   if (error) throw error;
-  return data as RegisterPropertyResult;
+  const result = data as RegisterPropertyResult;
+  await applyOpeningBalancesAfterRegister(input, result);
+  return result;
+}
+
+/** Deni la nyuma / alichokwisha lipa kwa kila kichwa kilichosajiliwa (kupitia ledger). */
+async function applyOpeningBalancesAfterRegister(input: RegisterPropertyInput, result: RegisterPropertyResult) {
+  for (let i = 0; i < input.units.length; i++) {
+    const op = input.units[i].opening;
+    const reg = result.units?.[i];
+    if (!op || !reg || (!op.debt && !op.paid)) continue;
+    try {
+      const u = await getUnitByCode(reg.code);
+      if (!u?.occupant_id) continue;
+      await applyOpeningBalance(u.occupant_id, op.debt, op.paid);
+    } catch (e) {
+      console.error('Opening balance failed for', reg.code, e);
+    }
+  }
 }
 
 /** Usajili wa offline: ukikosa mtandao unaingia kwenye foleni (returns null). */
@@ -554,4 +572,133 @@ export async function getMyWardIds(userId: string): Promise<string[]> {
   const { data, error } = await supabase.from('collector_wards').select('ward_id').eq('collector_id', userId);
   if (error) fail(error, 'Imeshindikana kupakia maeneo yako.');
   return (data ?? []).map((r: any) => r.ward_id as string);
+}
+
+
+/* ======================= KUHARIRI TAARIFA ZA KAYA (RPC) ====================== */
+
+export async function updatePropertyInfo(args: {
+  propertyId: string;
+  ownerName: string;
+  ownerPhone: string;
+  totalRooms: number | null;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+}) {
+  const { error } = await supabase.rpc('update_property_info', {
+    p_property: args.propertyId,
+    p_owner_name: args.ownerName.trim(),
+    p_owner_phone: args.ownerPhone.trim(),
+    p_total_rooms: args.totalRooms,
+    p_address: args.address.trim(),
+    p_lat: args.lat,
+    p_lng: args.lng,
+  });
+  if (error) fail(error, 'Imeshindikana kuhifadhi taarifa za nyumba.');
+}
+
+export async function updateOccupantInfo(args: {
+  occupantId: string;
+  fullName: string;
+  phone: string;
+  householdSize: number | null;
+}) {
+  const { error } = await supabase.rpc('update_occupant_info', {
+    p_occupant: args.occupantId,
+    p_full_name: args.fullName.trim(),
+    p_phone: args.phone.trim(),
+    p_household_size: args.householdSize,
+  });
+  if (error) fail(error, 'Imeshindikana kuhifadhi taarifa za mkazi.');
+}
+
+export async function updateUnitLabel(unitId: string, label: string) {
+  const { error } = await supabase.rpc('update_unit_label', { p_unit: unitId, p_label: label.trim() });
+  if (error) fail(error, 'Imeshindikana kubadili jina la kichwa.');
+}
+
+/** "Badilisha mkazi": anamtoa wa zamani (deni lake linabaki kwenye historia yake) na kuingiza mpya. */
+export async function replaceOccupant(args: {
+  unitId: string;
+  fullName: string;
+  phone: string;
+  householdSize: number | null;
+  openingDebt: number;
+  openingPaid: number;
+}) {
+  const { error } = await supabase.rpc('replace_occupant', {
+    p_unit: args.unitId,
+    p_full_name: args.fullName.trim(),
+    p_phone: args.phone.trim(),
+    p_household_size: args.householdSize,
+    p_opening_debt: args.openingDebt,
+    p_opening_paid: args.openingPaid,
+  });
+  if (error) fail(error, 'Imeshindikana kubadilisha mkazi.');
+}
+
+export async function applyOpeningBalance(occupantId: string, debt: number, paid: number) {
+  const { error } = await supabase.rpc('apply_opening_balance', {
+    p_occupant: occupantId,
+    p_debt: debt,
+    p_paid: paid,
+  });
+  if (error) fail(error, 'Imeshindikana kuweka deni la awali.');
+}
+
+/* ============================ WAFANYAKAZI WA KAMPUNI ========================= */
+
+export interface StaffRow {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  role: 'driver' | 'collector' | string;
+  is_active: boolean;
+  employee_id: string | null;
+  license_number: string | null;
+  created_at: string;
+}
+
+export async function listCompanyStaff(companyId: string): Promise<StaffRow[]> {
+  const { data, error } = await supabase.rpc('list_company_staff', { p_company: companyId });
+  if (error) fail(error, 'Imeshindikana kupakia wafanyakazi.');
+  return (data ?? []) as StaffRow[];
+}
+
+export async function setStaffActive(userId: string, active: boolean) {
+  const { error } = await supabase.rpc('set_staff_active', { p_user: userId, p_active: active });
+  if (error) fail(error, 'Imeshindikana kubadili hali ya mfanyakazi.');
+}
+
+export interface CreateStaffInput {
+  company_id: string;
+  role: 'driver' | 'collector';
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  password: string;
+  license_number?: string;
+  employee_id?: string;
+  ward_ids?: string[];
+}
+
+/** Admin wa kampuni anamsajili dereva/mkusanyaji (Edge Function: create-company-staff). */
+export async function createCompanyStaff(input: CreateStaffInput) {
+  const { data, error } = await supabase.functions.invoke('create-company-staff', { body: input });
+  if (error) {
+    // Jaribu kusoma ujumbe halisi kutoka kwa function
+    let msg = error.message;
+    try {
+      const ctx = (error as unknown as { context?: Response }).context;
+      if (ctx) msg = (await ctx.json()).error || msg;
+    } catch {
+      /* acha ujumbe wa kawaida */
+    }
+    throw new Error(msg || 'Imeshindikana kumsajili mfanyakazi.');
+  }
+  if (data?.error) throw new Error(data.error);
+  return data as { user_id: string };
 }

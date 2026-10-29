@@ -32,8 +32,6 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     usersRes,
     companiesRes,
     municipalitiesRes,
-    paymentsCompletedRes,
-    paymentsPendingRes,
     complaintsRes,
     vehiclesRes,
     routesRes,
@@ -41,8 +39,6 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     supabase.from("users").select("role"),
     supabase.from("companies").select("is_active"),
     supabase.from("municipalities").select("id", { count: "exact", head: true }),
-    supabase.from("payments").select("amount").eq("status", "completed"),
-    supabase.from("payments").select("amount").eq("status", "pending"),
     supabase.from("complaints").select("status"),
     supabase.from("vehicles").select("status"),
     supabase.from("routes").select("status"),
@@ -56,18 +52,14 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
   const totalCompanies = companiesRes.data?.length ?? 0;
   const activeCompanies = (companiesRes.data ?? []).filter((c) => c.is_active).length;
 
-  const paymentsTotalCompleted =
-    paymentsCompletedRes.data?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
-  const paymentsTotalPending =
-    paymentsPendingRes.data?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
-
   return {
     totalUsers: usersRes.data?.length ?? 0,
     totalCompanies,
     activeCompanies,
     totalMunicipalities: municipalitiesRes.count ?? 0,
-    paymentsTotalCompleted,
-    paymentsTotalPending,
+    // Malipo ya kampuni ni siri ya kampuni — super admin haoni.
+    paymentsTotalCompleted: 0,
+    paymentsTotalPending: 0,
     usersByRole,
     complaintsByStatus,
     vehiclesByStatus,

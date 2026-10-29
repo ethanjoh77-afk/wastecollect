@@ -13,7 +13,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
-import { Button, Input, Select } from '../common';
+import { Button, Input } from '../common';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -31,7 +31,6 @@ export function RegisterPage() {
     phone: '',
     password: '',
     confirm_password: '',
-    role: 'citizen',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +60,8 @@ export function RegisterPage() {
             first_name: formData.first_name,
             last_name: formData.last_name,
             phone: formData.phone,
-            role: formData.role,
+            // Usalama: kila anayejisajili mwenyewe ni mwananchi. Madereva/wakusanyaji wanasajiliwa na kampuni.
+            role: 'citizen',
           },
         },
       });
@@ -165,15 +165,6 @@ export function RegisterPage() {
                   required
                 />
 
-                <Select
-                  label={t('register_account_type')}
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  options={[
-                    { value: 'citizen', label: t('register_role_citizen') },
-                    { value: 'driver', label: t('register_role_driver') },
-                  ]}
-                />
               </motion.div>
             )}
 

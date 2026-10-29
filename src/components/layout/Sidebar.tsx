@@ -20,6 +20,7 @@ import {
   PlusCircle,
   Wallet,
   HandCoins,
+  Users,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
@@ -34,7 +35,9 @@ interface NavItem {
 }
 
 const ADMIN_ROLES: UserRole[] = ['super_admin', 'municipality_admin', 'company_admin'];
-const COLLECT_ROLES: UserRole[] = ['collector', 'company_admin', 'super_admin'];
+// Super admin hahusiki na data za kampuni (mapato, kaya, ukusanyaji)
+const COMPANY_DATA_ROLES: UserRole[] = ['municipality_admin', 'company_admin'];
+const COLLECT_ROLES: UserRole[] = ['collector', 'company_admin'];
 
 const navItems: NavItem[] = [
   { labelKey: 'nav_dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -48,13 +51,13 @@ const navItems: NavItem[] = [
     labelKey: 'nav_analytics',
     path: '/analytics',
     icon: BarChart3,
-    roles: ADMIN_ROLES,
+    roles: COMPANY_DATA_ROLES,
   },
   {
     labelKey: 'nav_operational_kpis',
     path: '/operational-kpis',
     icon: Fuel,
-    roles: ADMIN_ROLES,
+    roles: COMPANY_DATA_ROLES,
   },
   {
     labelKey: 'csm_admin_title',
@@ -66,7 +69,8 @@ const navItems: NavItem[] = [
   { labelKey: 'nav_collect_map', path: '/collect/map', icon: MapIcon, roles: COLLECT_ROLES },
   { labelKey: 'nav_collect_register', path: '/collect/register', icon: PlusCircle, roles: COLLECT_ROLES },
   { labelKey: 'nav_collect_shift', path: '/collect/shift', icon: Wallet, roles: ['collector'] },
-  { labelKey: 'nav_collect_admin', path: '/collect/admin', icon: HandCoins, roles: ['company_admin', 'super_admin'] },
+  { labelKey: 'nav_collect_admin', path: '/collect/admin', icon: HandCoins, roles: ['company_admin'] },
+  { labelKey: 'nav_company_staff', path: '/collect/admin/staff', icon: Users, roles: ['company_admin'] },
   { labelKey: 'nav_complaints', path: '/complaints', icon: MessageSquare },
   { labelKey: 'nav_payments', path: '/payments', icon: CreditCard },
   { labelKey: 'nav_schedules', path: '/schedules', icon: Calendar },

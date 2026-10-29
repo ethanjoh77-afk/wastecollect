@@ -27,7 +27,7 @@ export async function getSettings(): Promise<PlatformSettings> {
   const result: PlatformSettings = { ...DEFAULTS };
   (data ?? []).forEach((row) => {
     if (row.key in result) {
-      (result as Record<string, unknown>)[row.key] = row.value;
+      (result as unknown as Record<string, unknown>)[row.key] = row.value;
     }
   });
   return result;

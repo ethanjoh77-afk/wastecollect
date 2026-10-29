@@ -105,7 +105,7 @@ export async function createVehicle(input: CreateVehicleInput): Promise<Vehicle>
     .select()
     .single();
   if (error) throw error;
-  await writeAudit('vehicle.create', 'vehicles', data.id, input as Record<string, unknown>);
+  await writeAudit('vehicle.create', 'vehicles', data.id, input as unknown as Record<string, unknown>);
   return data;
 }
 

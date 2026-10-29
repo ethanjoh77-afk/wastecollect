@@ -9,7 +9,9 @@ import {
   CheckCircle2,
   Trash2,
   Building2,
+  MapPin,
 } from "lucide-react";
+import { CompanyWardsModal } from "../../components/superadmin/CompanyWardsModal";
 import { SuperAdminLayout } from "../../components/layout/SuperAdminLayout";
 import { DataTable } from "../../components/dashboard";
 import { Button, Input, Select, Textarea, Modal, ConfirmDialog, Badge } from "../../components/common";
@@ -64,6 +66,7 @@ export default function CompaniesManagementPage() {
   const [suspendTarget, setSuspendTarget] = useState<CompanyWithRelations | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<CompanyWithRelations | null>(null);
+  const [wardsTarget, setWardsTarget] = useState<{ id: string; name: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   async function loadCompanies() {
@@ -270,6 +273,16 @@ export default function CompaniesManagementPage() {
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setWardsTarget({ id: c.id, name: c.name });
+                    }}
+                    className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 dark:hover:bg-slate-700"
+                    title="Kata za kampuni"
+                  >
+                    <MapPin className="w-4 h-4" />
+                  </button>
                   {c.is_active ? (
                     <button
                       onClick={(e) => {
@@ -453,6 +466,7 @@ export default function CompaniesManagementPage() {
         variant="danger"
         isLoading={actionLoading}
       />
+      <CompanyWardsModal company={wardsTarget} onClose={() => setWardsTarget(null)} />
     </SuperAdminLayout>
   );
 }

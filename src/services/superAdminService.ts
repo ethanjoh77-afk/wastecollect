@@ -11,7 +11,6 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     municipalityAdmins,
     companyAdmins,
     requests,
-    paymentsCompleted,
     pendingComplaints,
     completedRoutes,
     activeVehicles,
@@ -23,15 +22,11 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "municipality_admin"),
     supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "company_admin"),
     supabase.from("waste_reports").select("*", { count: "exact", head: true }),
-    supabase.from("payments").select("amount").eq("status", "completed"),
     supabase.from("complaints").select("*", { count: "exact", head: true }).eq("status", "open"),
     supabase.from("routes").select("*", { count: "exact", head: true }).eq("status", "completed"),
     supabase.from("vehicles").select("*", { count: "exact", head: true }).in("status", ["available", "on_route"]),
     supabase.from("users").select("*", { count: "exact", head: true }).gte("last_login", fifteenMinAgo),
   ]);
-
-  const totalRevenue =
-    paymentsCompleted.data?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
 
   return {
     totalCompanies: companies.count ?? 0,
@@ -39,8 +34,9 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     totalDrivers: drivers.count ?? 0,
     totalAdmins: (municipalityAdmins.count ?? 0) + (companyAdmins.count ?? 0),
     totalRequests: requests.count ?? 0,
-    totalPayments: paymentsCompleted.data?.length ?? 0,
-    totalRevenue,
+    // Mapato na malipo ya kampuni ni siri ya kila kampuni — super admin haoni.
+    totalPayments: 0,
+    totalRevenue: 0,
     pendingComplaints: pendingComplaints.count ?? 0,
     completedCollections: completedRoutes.count ?? 0,
     activeVehicles: activeVehicles.count ?? 0,

@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "../components/layout";
+import { SuperAdminLayout } from "../components/layout/SuperAdminLayout";
 import { supabase } from "../lib/supabase";
 import { debounce } from "../lib/debounce";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../hooks/useAuth";
+import { useCollectionCompany } from "../hooks/useCollectionCompany";
+import { listCompanyStaff } from "../services/collectionService";
+import { assignReportCompany, companiesForWard, type CompanyOption } from "../services/companyWardsService";
 
 type Report = {
   id: string;
@@ -17,6 +22,8 @@ type Report = {
   issue_reported_at?: string | null;
   decline_note?: string | null;
   declined_at?: string | null;
+  company_id?: string | null;
+  ward_id?: string | null;
 };
 
 type Driver = {
@@ -26,15 +33,31 @@ type Driver = {
 };
 
 export default function AdminReportsPage() {
+  const { user } = useAuth();
+  // Super admin haoni ripoti za kampuni; anaelekeza tu ripoti zisizo na kampuni.
+  if (user?.role === "super_admin") return <UnroutedReportsPage />;
+  return <CompanyReportsPage />;
+}
+
+function CompanyReportsPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { companyId, loading: companyLoading } = useCollectionCompany();
+  const isCompanyAdmin = user?.role === "company_admin";
   const [reports, setReports] = useState<Report[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [reassignTarget, setReassignTarget] = useState<Record<string, string>>({});
 
-  const debouncedLoadReports = useRef(debounce(loadReports, 1000)).current;
+  const loadReportsRef = useRef<() => void>(() => {});
+  const debouncedLoadReports = useRef(debounce(() => loadReportsRef.current(), 1000)).current;
 
   useEffect(() => {
+    if (isCompanyAdmin && !companyId) {
+      if (!companyLoading) setLoading(false);
+      return;
+    }
+    loadReportsRef.current = loadReports;
     loadReports();
     loadDrivers();
 
@@ -48,9 +71,22 @@ export default function AdminReportsPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [companyId, companyLoading, isCompanyAdmin]);
 
   async function loadDrivers() {
+    if (isCompanyAdmin && companyId) {
+      // Madereva wa kampuni hii PEKEE
+      const staff = await listCompanyStaff(companyId).catch(() => []);
+      setDrivers(
+        staff
+          .filter((s) => s.role === "driver" && s.is_active)
+          .map((s) => {
+            const [first, ...rest] = (s.full_name || "").split(" ");
+            return { id: s.user_id, first_name: first, last_name: rest.join(" ") };
+          })
+      );
+      return;
+    }
     const { data } = await supabase
       .from("users")
       .select("id, first_name, last_name")
@@ -60,10 +96,9 @@ export default function AdminReportsPage() {
 
   async function loadReports() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("waste_reports")
-      .select("*")
-      .order("created_at", { ascending: false });
+    let q = supabase.from("waste_reports").select("*").order("created_at", { ascending: false });
+    if (isCompanyAdmin && companyId) q = q.eq("company_id", companyId);
+    const { data, error } = await q;
     if (!error && data) setReports(data);
     setLoading(false);
   }
@@ -281,5 +316,103 @@ export default function AdminReportsPage() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+/* ================= SUPER ADMIN: ripoti zisizo na kampuni ================= */
+function UnroutedReportsPage() {
+  const { t } = useTranslation();
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [options, setOptions] = useState<Record<string, CompanyOption[]>>({});
+  const [choice, setChoice] = useState<Record<string, string>>({});
+  const [allCompanies, setAllCompanies] = useState<CompanyOption[]>([]);
+
+  async function load() {
+    setLoading(true);
+    const [{ data }, { data: comps }] = await Promise.all([
+      supabase
+        .from("waste_reports")
+        .select("*")
+        .is("company_id", null)
+        .order("created_at", { ascending: false }),
+      supabase.from("companies").select("id, name").order("name"),
+    ]);
+    const list = (data ?? []) as Report[];
+    setReports(list);
+    setAllCompanies((comps ?? []) as CompanyOption[]);
+    const map: Record<string, CompanyOption[]> = {};
+    await Promise.all(
+      list
+        .filter((r) => r.ward_id)
+        .map(async (r) => {
+          map[r.id] = await companiesForWard(r.ward_id as string).catch(() => []);
+        })
+    );
+    setOptions(map);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function assign(reportId: string) {
+    const companyId = choice[reportId];
+    if (!companyId) return alert("Chagua kampuni kwanza.");
+    try {
+      await assignReportCompany(reportId, companyId);
+      load();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  return (
+    <SuperAdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Ripoti zisizo na kampuni</h1>
+          <p className="text-gray-500">
+            Ripoti zinazoingia kwa kampuni husika kiotomatiki hazionekani hapa. Hizi ni zile ambazo kata yake haina kampuni moja
+            iliyo wazi.
+          </p>
+        </div>
+        {loading ? (
+          <p className="text-gray-500">{t("admin_reports_loading")}</p>
+        ) : reports.length === 0 ? (
+          <p className="text-gray-500">Hakuna ripoti zinazosubiri kuelekezwa.</p>
+        ) : (
+          reports.map((r) => {
+            const list = (options[r.id]?.length ? options[r.id] : allCompanies);
+            return (
+              <div key={r.id} className="bg-white dark:bg-slate-800 rounded-xl shadow p-5 space-y-3">
+                <h2 className="text-lg font-bold capitalize">{r.report_type.replaceAll("_", " ")}</h2>
+                <p>{r.description}</p>
+                <p className="text-sm text-gray-500">📍 {r.address} • {new Date(r.created_at).toLocaleString()}</p>
+                <div className="flex gap-2">
+                  <select
+                    value={choice[r.id] ?? ""}
+                    onChange={(e) => setChoice((c) => ({ ...c, [r.id]: e.target.value }))}
+                    className="flex-1 border rounded-lg p-3 dark:bg-slate-900"
+                  >
+                    <option value="">Chagua kampuni</option>
+                    {list.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => assign(r.id)}
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 rounded-lg whitespace-nowrap"
+                  >
+                    Elekeza
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </SuperAdminLayout>
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, UserPlus, LogOut, Undo2, Banknote } from 'lucide-react';
+import { ArrowLeft, UserPlus, LogOut, Undo2, Banknote, Pencil, Repeat, Scale } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/layout';
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, Input, Modal, Select } from '../../components/common';
@@ -11,12 +11,16 @@ import { useAuth } from '../../hooks/useAuth';
 import { newClientUuid } from '../../lib/offlineQueue';
 import {
   addOccupant,
+  applyOpeningBalance,
   getUnitByCode,
   getUnitOccupants,
   getUnitPayments,
   moveOutOccupant,
   recordPaymentOrQueue,
+  replaceOccupant,
   reversePayment,
+  updateOccupantInfo,
+  updateUnitLabel,
 } from '../../services/collectionService';
 import {
   PAY_METHOD_LABEL,
@@ -53,7 +57,10 @@ export default function UnitPaymentPage() {
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
 
   const [showAddOccupant, setShowAddOccupant] = useState(false);
-  const [occ, setOcc] = useState({ name: '', phone: '', size: '' });
+  const [occ, setOcc] = useState({ name: '', phone: '', size: '', debt: '', paid: '' });
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; size: string; label: string } | null>(null);
+  const [replaceForm, setReplaceForm] = useState<{ name: string; phone: string; size: string; debt: string; paid: string } | null>(null);
+  const [openingForm, setOpeningForm] = useState<{ debt: string; paid: string } | null>(null);
   const [reverseFor, setReverseFor] = useState<UnitPayment | null>(null);
   const [reason, setReason] = useState('');
 
@@ -123,9 +130,15 @@ export default function UnitPaymentPage() {
         phone: occ.phone.trim(),
         householdSize: occ.size ? Number(occ.size) : null,
       });
+      const debt = Number(occ.debt) || 0;
+      const paid = Number(occ.paid) || 0;
+      if (debt > 0 || paid > 0) {
+        const fresh = await getUnitByCode(unit.code);
+        if (fresh?.occupant_id) await applyOpeningBalance(fresh.occupant_id, debt, paid);
+      }
       toast.success('Mkazi ameongezwa. Madeni yataanza mwezi unaofuata.');
       setShowAddOccupant(false);
-      setOcc({ name: '', phone: '', size: '' });
+      setOcc({ name: '', phone: '', size: '', debt: '', paid: '' });
       load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -138,6 +151,65 @@ export default function UnitPaymentPage() {
     try {
       await moveOutOccupant(unit.occupant_id);
       toast.success('Mkazi ametolewa. Kichwa sasa kiko wazi.');
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!unit || !editForm) return;
+    if (!editForm.name.trim()) return toast.error('Weka jina la mkazi.');
+    try {
+      if (unit.occupant_id) {
+        await updateOccupantInfo({
+          occupantId: unit.occupant_id,
+          fullName: editForm.name,
+          phone: editForm.phone,
+          householdSize: editForm.size ? Number(editForm.size) : null,
+        });
+      }
+      if ((unit.label ?? '') !== editForm.label.trim()) {
+        await updateUnitLabel(unit.billing_unit_id, editForm.label);
+      }
+      toast.success('Taarifa zimehifadhiwa.');
+      setEditForm(null);
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function handleReplace() {
+    if (!unit || !replaceForm) return;
+    if (!replaceForm.name.trim()) return toast.error('Weka jina la mkazi mpya.');
+    if (!window.confirm(`Badilisha ${unit.full_name ?? 'mkazi'} na ${replaceForm.name.trim()}? Deni la ${unit.full_name ?? 'wa zamani'} litabaki kwenye historia yake.`)) return;
+    try {
+      await replaceOccupant({
+        unitId: unit.billing_unit_id,
+        fullName: replaceForm.name,
+        phone: replaceForm.phone,
+        householdSize: replaceForm.size ? Number(replaceForm.size) : null,
+        openingDebt: Number(replaceForm.debt) || 0,
+        openingPaid: Number(replaceForm.paid) || 0,
+      });
+      toast.success('Mkazi amebadilishwa. Jina jipya sasa ndilo kichwani.');
+      setReplaceForm(null);
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function handleOpening() {
+    if (!unit?.occupant_id || !openingForm) return;
+    const debt = Number(openingForm.debt) || 0;
+    const paid = Number(openingForm.paid) || 0;
+    if (debt <= 0 && paid <= 0) return toast.error('Weka deni la nyuma au kiasi alichokwisha lipa.');
+    try {
+      await applyOpeningBalance(unit.occupant_id, debt, paid);
+      toast.success('Deni la awali limewekwa.');
+      setOpeningForm(null);
       load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -211,7 +283,38 @@ export default function UnitPaymentPage() {
                 )}
 
                 {unit.pay_status !== 'vacant' && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<Pencil className="w-4 h-4" />}
+                      onClick={() =>
+                        setEditForm({
+                          name: unit.full_name ?? '',
+                          phone: unit.phone ?? '',
+                          size: '',
+                          label: unit.label ?? '',
+                        })
+                      }
+                    >
+                      Hariri
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<Repeat className="w-4 h-4" />}
+                      onClick={() => setReplaceForm({ name: '', phone: '', size: '', debt: '', paid: '' })}
+                    >
+                      Badilisha mkazi
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      leftIcon={<Scale className="w-4 h-4" />}
+                      onClick={() => setOpeningForm({ debt: '', paid: '' })}
+                    >
+                      Deni la awali
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={handleMoveOut} leftIcon={<LogOut className="w-4 h-4" />}>
                       Amehama
                     </Button>
@@ -360,10 +463,76 @@ export default function UnitPaymentPage() {
             value={occ.size}
             onChange={(e) => setOcc({ ...occ, size: e.target.value })}
           />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Deni la nyuma (TZS)" type="number" min={0} value={occ.debt} onChange={(e) => setOcc({ ...occ, debt: e.target.value })} />
+            <Input label="Alishalipa (TZS)" type="number" min={0} value={occ.paid} onChange={(e) => setOcc({ ...occ, paid: e.target.value })} />
+          </div>
+          <p className="text-xs text-secondary-500">Acha tupu kama hana deni la nyuma wala hajalipa chochote.</p>
           <Button className="w-full" onClick={handleAddOccupant}>
             Hifadhi
           </Button>
         </div>
+      </Modal>
+
+      <Modal isOpen={!!editForm} onClose={() => setEditForm(null)} title="Hariri taarifa">
+        {editForm && (
+          <div className="space-y-3">
+            <Input label="Jina kamili" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            <Input label="Simu" type="tel" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+            <Input
+              label="Idadi ya watu (hiari)"
+              type="number"
+              min={1}
+              value={editForm.size}
+              onChange={(e) => setEditForm({ ...editForm, size: e.target.value })}
+            />
+            <Input label="Jina la chumba/biashara" value={editForm.label} onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} />
+            <Button className="w-full" onClick={handleSaveEdit}>
+              Hifadhi
+            </Button>
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!replaceForm} onClose={() => setReplaceForm(null)} title="Badilisha mkazi">
+        {replaceForm && (
+          <div className="space-y-3">
+            <p className="text-sm text-secondary-600 dark:text-secondary-300">
+              Jina la zamani litaondoka kwenye kichwa hiki. Deni lake linabaki kwenye historia yake, na mkazi mpya anaanza upya.
+            </p>
+            <Input label="Jina la mkazi mpya" value={replaceForm.name} onChange={(e) => setReplaceForm({ ...replaceForm, name: e.target.value })} />
+            <Input label="Simu" type="tel" value={replaceForm.phone} onChange={(e) => setReplaceForm({ ...replaceForm, phone: e.target.value })} />
+            <Input
+              label="Idadi ya watu (hiari)"
+              type="number"
+              min={1}
+              value={replaceForm.size}
+              onChange={(e) => setReplaceForm({ ...replaceForm, size: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Deni la nyuma (TZS)" type="number" min={0} value={replaceForm.debt} onChange={(e) => setReplaceForm({ ...replaceForm, debt: e.target.value })} />
+              <Input label="Alishalipa (TZS)" type="number" min={0} value={replaceForm.paid} onChange={(e) => setReplaceForm({ ...replaceForm, paid: e.target.value })} />
+            </div>
+            <Button className="w-full" onClick={handleReplace}>
+              Badilisha
+            </Button>
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!openingForm} onClose={() => setOpeningForm(null)} title="Deni la awali">
+        {openingForm && (
+          <div className="space-y-3">
+            <p className="text-sm text-secondary-600 dark:text-secondary-300">
+              Weka alichokuwa anadaiwa kabla ya kuingia kwenye mfumo, na kiasi alichokwisha lipa. Rekodi inaingia kwenye ledger (haihaririwi baadaye).
+            </p>
+            <Input label="Deni la nyuma (TZS)" type="number" min={0} value={openingForm.debt} onChange={(e) => setOpeningForm({ ...openingForm, debt: e.target.value })} />
+            <Input label="Alishalipa (TZS)" type="number" min={0} value={openingForm.paid} onChange={(e) => setOpeningForm({ ...openingForm, paid: e.target.value })} />
+            <Button className="w-full" onClick={handleOpening}>
+              Hifadhi
+            </Button>
+          </div>
+        )}
       </Modal>
 
       <Modal isOpen={!!reverseFor} onClose={() => setReverseFor(null)} title="Rekebisha malipo">

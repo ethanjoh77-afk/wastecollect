@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { Users, Building2, Truck, DollarSign } from "lucide-react";
+import { Users, Building2, Truck } from "lucide-react";
 import { SuperAdminLayout } from "../../components/layout/SuperAdminLayout";
 import { StatCard, BarChartCard, PieChartCard, LineChartCard } from "../../components/dashboard";
 import {
   getPlatformOverview,
   getUserSignupTrend,
-  getRevenueTrend,
   type PlatformOverview,
   type MonthPoint,
 } from "../../services/analyticsService";
@@ -24,21 +23,18 @@ export default function AnalyticsPage() {
 
   const [overview, setOverview] = useState<PlatformOverview | null>(null);
   const [signupTrend, setSignupTrend] = useState<MonthPoint[]>([]);
-  const [revenueTrend, setRevenueTrend] = useState<MonthPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const [overviewData, signups, revenue] = await Promise.all([
+        const [overviewData, signups] = await Promise.all([
           getPlatformOverview(),
           getUserSignupTrend(6),
-          getRevenueTrend(6),
         ]);
         setOverview(overviewData);
         setSignupTrend(signups);
-        setRevenueTrend(revenue);
       } catch (err) {
         console.error(err);
         toast.error(t("superadmin_analytics_load_failed"));
@@ -93,12 +89,6 @@ export default function AnalyticsPage() {
             icon={Building2}
             iconColor="bg-emerald-500"
           />
-          <StatCard
-            title={t("superadmin_analytics_stat_revenue")}
-            value={`TZS ${overview.paymentsTotalCompleted.toLocaleString()}`}
-            icon={DollarSign}
-            iconColor="bg-amber-500"
-          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -106,11 +96,6 @@ export default function AnalyticsPage() {
             title={t("superadmin_analytics_chart_signups")}
             data={signupTrend}
             lines={[{ dataKey: "value", stroke: "#10b981", name: t("superadmin_analytics_stat_users") }]}
-          />
-          <LineChartCard
-            title={t("superadmin_analytics_chart_revenue")}
-            data={revenueTrend}
-            lines={[{ dataKey: "value", stroke: "#0ea5e9", name: "TZS" }]}
           />
         </div>
 
@@ -125,12 +110,6 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            title={t("superadmin_analytics_stat_pending_payments")}
-            value={`TZS ${overview.paymentsTotalPending.toLocaleString()}`}
-            icon={DollarSign}
-            iconColor="bg-orange-500"
-          />
           <StatCard
             title={t("superadmin_analytics_stat_open_complaints")}
             value={overview.complaintsByStatus.open ?? 0}

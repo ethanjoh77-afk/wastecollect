@@ -9,6 +9,7 @@ import { uploadReportPhoto } from "../lib/storageService";
 import { Input } from "../components/common/Input";
 import { Select } from "../components/common/Select";
 import { Textarea } from "../components/common/Textarea";
+import { companiesForWard, listAllWards, type CompanyOption, type WardOption } from "../services/companyWardsService";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -24,6 +25,12 @@ export default function ReportIssue() {
   const [reportType, setReportType] = useState("illegal_dumping");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
+
+  // Kata + kampuni: ripoti inaenda kwa kampuni inayohudumia kata ya mwananchi
+  const [wards, setWards] = useState<WardOption[]>([]);
+  const [wardId, setWardId] = useState("");
+  const [wardCompanies, setWardCompanies] = useState<CompanyOption[]>([]);
+  const [companyId, setCompanyId] = useState("");
 
   const [photo, setPhoto] = useState<File | null>(null);
 
@@ -47,6 +54,22 @@ export default function ReportIssue() {
     if (!error) setMyReports(data || []);
     setLoadingReports(false);
   };
+
+  useEffect(() => {
+    listAllWards().then(setWards).catch(() => setWards([]));
+  }, []);
+
+  useEffect(() => {
+    setCompanyId("");
+    setWardCompanies([]);
+    if (!wardId) return;
+    companiesForWard(wardId)
+      .then((list) => {
+        setWardCompanies(list);
+        if (list.length === 1) setCompanyId(list[0].id);
+      })
+      .catch(() => setWardCompanies([]));
+  }, [wardId]);
 
   useEffect(() => {
     loadMyReports();
@@ -109,6 +132,15 @@ export default function ReportIssue() {
       return;
     }
 
+    if (wards.length > 0 && !wardId) {
+      alert("Chagua kata uliyopo ili ripoti ifike kwa kampuni sahihi.");
+      return;
+    }
+    if (wardCompanies.length > 1 && !companyId) {
+      alert("Chagua kampuni ya taka inayohudumia eneo lako.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -131,6 +163,10 @@ export default function ReportIssue() {
           location_lng: locationLng,
 
           photos: photoUrl ? [photoUrl] : [],
+
+          // Uelekezaji: kata ndiyo inayoamua kampuni (database inajaza company_id)
+          ward_id: wardId || null,
+          ...(companyId ? { company_id: companyId } : {}),
         })
         .select()
         .single();
@@ -148,6 +184,7 @@ export default function ReportIssue() {
       setReportType("illegal_dumping");
       setDescription("");
       setAddress("");
+      setWardId("");
       setPhoto(null);
       setLocationLat(null);
       setLocationLng(null);
@@ -197,6 +234,34 @@ export default function ReportIssue() {
           onChange={(e) => setDescription(e.target.value)}
           required
         />
+
+        <Select
+          label="Kata"
+          value={wardId}
+          onChange={(e) => setWardId(e.target.value)}
+          options={[
+            { value: "", label: "Chagua kata yako" },
+            ...wards.map((w) => ({ value: w.id, label: w.name })),
+          ]}
+        />
+
+        {wardId && wardCompanies.length > 1 && (
+          <Select
+            label="Kampuni ya taka"
+            value={companyId}
+            onChange={(e) => setCompanyId(e.target.value)}
+            options={[
+              { value: "", label: "Chagua kampuni" },
+              ...wardCompanies.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
+        )}
+
+        {wardId && wardCompanies.length === 0 && (
+          <p className="text-sm text-amber-600">
+            Kata hii haina kampuni iliyosajiliwa bado. Ripoti yako itapokelewa na kuelekezwa baadaye.
+          </p>
+        )}
 
         <Input
           label={t('report_address_label')}
