@@ -6,6 +6,7 @@ import { debounce } from "../lib/debounce";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import { useCollectionCompany } from "../hooks/useCollectionCompany";
+import { CompanyPicker } from "../components/collection/CompanyPicker";
 import { listCompanyStaff } from "../services/collectionService";
 import { assignReportCompany, companiesForWard, type CompanyOption } from "../services/companyWardsService";
 
@@ -42,7 +43,7 @@ export default function AdminReportsPage() {
 function CompanyReportsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { companyId, loading: companyLoading } = useCollectionCompany();
+  const { companies, companyId, setCompanyId, loading: companyLoading, error: companyError } = useCollectionCompany();
   const isCompanyAdmin = user?.role === "company_admin";
   const [reports, setReports] = useState<Report[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -166,7 +167,13 @@ function CompanyReportsPage() {
           <p className="text-gray-500">{t('admin_reports_subtitle')}</p>
         </div>
 
-        {loading ? (
+        {isCompanyAdmin && <CompanyPicker companies={companies} value={companyId} onChange={setCompanyId} />}
+
+        {isCompanyAdmin && !companyLoading && companyError ? (
+          <p className="rounded-xl bg-amber-50 text-amber-800 p-4 text-sm">
+            {companyError} Muombe super admin akuunganishe na kampuni yako.
+          </p>
+        ) : loading ? (
           <p className="text-gray-500">{t('admin_reports_loading')}</p>
         ) : reports.length === 0 ? (
           <p className="text-gray-500">{t('admin_reports_none_found')}</p>

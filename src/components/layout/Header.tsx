@@ -118,7 +118,7 @@ export function Header() {
       navigate('/reports');
     } else if (notification.type === 'report_assigned') {
       navigate('/dashboard');
-    } else if (notification.type === 'report_status_update') {
+    } else if (notification.type === 'report_status_update' || notification.type === 'report_submitted') {
       navigate('/report-issue');
     }
   };

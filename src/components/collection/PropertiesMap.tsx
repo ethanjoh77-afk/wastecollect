@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { CircleMarker, MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import type { LatLngBoundsExpression } from 'leaflet';
 import { greenIcon, redIcon, yellowIcon } from '../maps/mapIcons';
+import { BaseLayers } from '../maps/BaseLayers';
+import { directionsUrl, streetViewUrl } from '../../lib/maps';
 import { PayStatusBadge, money } from './PayStatusBadge';
 import { PROPERTY_TYPE_LABEL, type PropertyMapRow } from '../../types/collection.types';
 
@@ -49,10 +51,7 @@ export function PropertiesMap({ properties, height = '70vh' }: Props) {
   return (
     <div className="rounded-2xl overflow-hidden border border-secondary-100 dark:border-slate-700" style={{ height }}>
       <MapContainer center={points[0] ?? DEFAULT_CENTER} zoom={15} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <BaseLayers />
         <FitBounds points={points} />
 
         {me && <CircleMarker center={me} radius={8} pathOptions={{ color: '#2563eb', fillOpacity: 0.9 }} />}
@@ -79,6 +78,24 @@ export function PropertiesMap({ properties, height = '70vh' }: Props) {
                 >
                   Fungua nyumba
                 </button>
+                <div className="mt-1 grid grid-cols-2 gap-1">
+                  <a
+                    href={streetViewUrl(pos[0], pos[1])}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-primary-300 px-2 py-1.5 text-center text-xs font-medium text-primary-700"
+                  >
+                    Street View
+                  </a>
+                  <a
+                    href={directionsUrl(pos[0], pos[1])}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-primary-300 px-2 py-1.5 text-center text-xs font-medium text-primary-700"
+                  >
+                    Elekea hapa
+                  </a>
+                </div>
               </div>
             </Popup>
           );

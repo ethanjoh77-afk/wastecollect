@@ -11,6 +11,7 @@ import {
   Building2,
   MapPin,
 } from "lucide-react";
+import { createAdmin } from "../../services/adminManagementService";
 import { CompanyWardsModal } from "../../components/superadmin/CompanyWardsModal";
 import { SuperAdminLayout } from "../../components/layout/SuperAdminLayout";
 import { DataTable } from "../../components/dashboard";
@@ -24,6 +25,7 @@ import {
   suspendCompany,
   activateCompany,
   deleteCompany,
+  setCompanyAdmin,
   type CompanyWithRelations,
   type CompanyFormInput,
 } from "../../services/companyManagementService";
@@ -66,6 +68,8 @@ export default function CompaniesManagementPage() {
   const [suspendTarget, setSuspendTarget] = useState<CompanyWithRelations | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<CompanyWithRelations | null>(null);
+  const [adminMode, setAdminMode] = useState<"existing" | "new">("existing");
+  const [newAdmin, setNewAdmin] = useState({ first_name: "", last_name: "", email: "", phone: "", password: "" });
   const [wardsTarget, setWardsTarget] = useState<{ id: string; name: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -89,12 +93,15 @@ export default function CompaniesManagementPage() {
   }, []);
 
   function openCreateModal() {
+    setAdminMode("existing");
+    setNewAdmin({ first_name: "", last_name: "", email: "", phone: "", password: "" });
     setEditingId(null);
     setFormData(emptyForm);
     setIsModalOpen(true);
   }
 
   function openEditModal(company: CompanyWithRelations) {
+    setAdminMode("existing");
     setEditingId(company.id);
     setFormData({
       name: company.name,
@@ -123,8 +130,38 @@ export default function CompaniesManagementPage() {
         await updateCompany(editingId, formData);
         toast.success(t("superadmin_companies_updated"));
       } else {
-        await createCompany(formData);
-        toast.success(t("superadmin_companies_created"));
+        const wantsNewAdmin = adminMode === "new";
+        if (wantsNewAdmin) {
+          if (!newAdmin.first_name.trim() || !newAdmin.email.trim() || newAdmin.password.length < 8) {
+            toast.error("Jaza jina, barua pepe na nenosiri (angalau herufi 8) la msimamizi.");
+            setIsSaving(false);
+            return;
+          }
+        }
+        const company = await createCompany(wantsNewAdmin ? { ...formData, admin_id: "" } : formData);
+        if (wantsNewAdmin) {
+          try {
+            const user = await createAdmin({
+              email: newAdmin.email.trim(),
+              password: newAdmin.password,
+              first_name: newAdmin.first_name.trim(),
+              last_name: newAdmin.last_name.trim(),
+              phone: newAdmin.phone.trim() || undefined,
+              role: "company_admin",
+              company_id: company.id,
+            });
+            await setCompanyAdmin(company.id, user.id);
+            toast.success("Kampuni na msimamizi wake vimesajiliwa.");
+          } catch (adminErr: any) {
+            toast.error("Kampuni imesajiliwa, lakini msimamizi hajaundwa: " + (adminErr?.message || "kosa"));
+            setIsModalOpen(false);
+            loadCompanies();
+            setIsSaving(false);
+            return;
+          }
+        } else {
+          toast.success(t("superadmin_companies_created"));
+        }
       }
       setIsModalOpen(false);
       loadCompanies();
@@ -382,6 +419,20 @@ export default function CompaniesManagementPage() {
             />
           </div>
 
+          {!editingId && adminMode === "new" && (
+            <div className="rounded-xl border border-primary-200 dark:border-slate-600 p-4 space-y-3">
+              <p className="text-sm font-medium">Taarifa za msimamizi wa kampuni</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input label="Jina la kwanza" value={newAdmin.first_name} onChange={(e) => setNewAdmin({ ...newAdmin, first_name: e.target.value })} />
+                <Input label="Jina la mwisho" value={newAdmin.last_name} onChange={(e) => setNewAdmin({ ...newAdmin, last_name: e.target.value })} />
+              </div>
+              <Input label="Barua pepe (ya kuingia)" type="email" value={newAdmin.email} onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })} />
+              <Input label="Simu" type="tel" value={newAdmin.phone} onChange={(e) => setNewAdmin({ ...newAdmin, phone: e.target.value })} />
+              <Input label="Nenosiri la kuanzia" value={newAdmin.password} onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })} />
+              <p className="text-xs text-secondary-500">Angalau herufi 8. Mpe msimamizi, aibadili baada ya kuingia.</p>
+            </div>
+          )}
+
           <Textarea
             label={t("superadmin_companies_field_address")}
             value={formData.address}
@@ -390,16 +441,29 @@ export default function CompaniesManagementPage() {
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label={t("superadmin_companies_field_admin")}
-              placeholder={t("superadmin_companies_select_admin")}
-              value={formData.admin_id ?? ""}
-              onChange={(e) => setFormData({ ...formData, admin_id: e.target.value })}
-              options={admins.map((a) => ({
-                value: a.id,
-                label: `${a.first_name} ${a.last_name} (${a.email})`,
-              }))}
-            />
+            {!editingId && (
+              <Select
+                label="Msimamizi wa kampuni"
+                value={adminMode}
+                onChange={(e) => setAdminMode(e.target.value as "existing" | "new")}
+                options={[
+                  { value: "existing", label: "Chagua msimamizi aliyepo" },
+                  { value: "new", label: "Sajili msimamizi mpya sasa" },
+                ]}
+              />
+            )}
+            {(editingId || adminMode === "existing") && (
+              <Select
+                label={t("superadmin_companies_field_admin")}
+                placeholder={t("superadmin_companies_select_admin")}
+                value={formData.admin_id ?? ""}
+                onChange={(e) => setFormData({ ...formData, admin_id: e.target.value })}
+                options={admins.map((a) => ({
+                  value: a.id,
+                  label: `${a.first_name} ${a.last_name} (${a.email})`,
+                }))}
+              />
+            )}
             <Select
               label={t("superadmin_companies_field_plan")}
               value={formData.subscription_plan}

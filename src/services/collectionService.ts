@@ -691,6 +691,11 @@ export async function createCompanyStaff(input: CreateStaffInput) {
   if (error) {
     // Jaribu kusoma ujumbe halisi kutoka kwa function
     let msg = error.message;
+    if (/failed to send a request|fetch/i.test(msg)) {
+      throw new Error(
+        "Function 'create-company-staff' haijapatikana. Hakikisha imewekwa (deploy) kwenye Supabase → Edge Functions, kisha jaribu tena."
+      );
+    }
     try {
       const ctx = (error as unknown as { context?: Response }).context;
       if (ctx) msg = (await ctx.json()).error || msg;

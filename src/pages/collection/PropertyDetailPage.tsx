@@ -6,6 +6,7 @@ import { DashboardLayout } from '../../components/layout';
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, Input, Modal, Select } from '../../components/common';
 import { PayStatusBadge, money } from '../../components/collection/PayStatusBadge';
 import { StickerSheet } from '../../components/collection/StickerSheet';
+import { directionsUrl, streetViewUrl } from '../../lib/maps';
 import { addUnitToProperty, getProperty, listPropertyUnits, updatePropertyInfo, type PropertyRow } from '../../services/collectionService';
 import {
   PROPERTY_TYPE_LABEL,
@@ -137,6 +138,26 @@ export default function PropertyDetailPage() {
                   {property.address ? ` • ${property.address}` : ''}
                   {property.total_rooms ? ` • vyumba ${property.total_rooms}` : ''}
                 </p>
+                {property.location_lat != null && property.location_lng != null && (
+                  <div className="flex gap-3 text-sm">
+                    <a
+                      href={streetViewUrl(property.location_lat, property.location_lng)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary-600 underline"
+                    >
+                      Street View
+                    </a>
+                    <a
+                      href={directionsUrl(property.location_lat, property.location_lng)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary-600 underline"
+                    >
+                      Elekea hapa
+                    </a>
+                  </div>
+                )}
                 {property.owner_phone && (
                   <a href={`tel:${property.owner_phone}`} className="text-sm text-primary-600">
                     {property.owner_phone}

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Popup,
 } from "react-leaflet";
@@ -10,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 
 import { supabase } from "../../lib/supabase";
 import { truckIcon } from "./truckIcon";
+import { BaseLayers } from "./BaseLayers";
 import { debounce } from "../../lib/debounce";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -104,10 +104,7 @@ export default function TruckMap() {
         borderRadius: "12px",
       }}
     >
-      <TileLayer
-        attribution="© OpenStreetMap"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <BaseLayers />
 
       {trucks.map((truck) => (
         <Marker

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Popup,
 } from "react-leaflet";
@@ -9,6 +8,8 @@ import "leaflet/dist/leaflet.css";
 
 import { supabase } from "../../lib/supabase";
 import { getStatusIcon } from "./mapIcons";
+import { BaseLayers } from "./BaseLayers";
+import { streetViewUrl } from "../../lib/maps";
 
 type Report = {
   id: string;
@@ -122,10 +123,7 @@ export default function ReportMap() {
         borderRadius: "12px",
       }}
     >
-      <TileLayer
-        attribution="© OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <BaseLayers />
 
       {reports.map((report) => (
         <Marker
@@ -150,6 +148,15 @@ export default function ReportMap() {
               <p className="text-xs text-gray-500">
                 {new Date(report.created_at).toLocaleString()}
               </p>
+
+              <a
+                href={streetViewUrl(report.location_lat, report.location_lng)}
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded-lg border border-primary-300 px-2 py-1.5 text-center text-xs font-medium text-primary-700"
+              >
+                Tazama Street View
+              </a>
 
               {report.photos && report.photos.length > 0 && (
                 <img

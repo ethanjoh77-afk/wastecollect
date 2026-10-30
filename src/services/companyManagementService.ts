@@ -199,3 +199,8 @@ export async function deleteCompany(id: string) {
 
   await logAudit("company_deleted", "companies", id, oldData, null);
 }
+/** Unganisha msimamizi (admin) na kampuni baada ya kuundwa. */
+export async function setCompanyAdmin(companyId: string, adminId: string) {
+  const { error } = await supabase.from("companies").update({ admin_id: adminId }).eq("id", companyId);
+  if (error) throw error;
+}
