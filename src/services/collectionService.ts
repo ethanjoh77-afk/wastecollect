@@ -685,25 +685,50 @@ export interface CreateStaffInput {
   ward_ids?: string[];
 }
 
+/**
+ * Majina (slug) ya Edge Function ya kusajili wafanyakazi. Supabase Dashboard inapounda function kupitia
+ * editor, slug ya URL inaweza kubaki jina la nasibu (mf. "swift-responder") hata ukibadili jina la
+ * kuonyesha. Tunajaribu kwa mpangilio; unaweza pia kuweka VITE_STAFF_FUNCTION kwenye Vercel.
+ */
+const STAFF_FUNCTION_SLUGS = [
+  import.meta.env.VITE_STAFF_FUNCTION as string | undefined,
+  'create-company-staff',
+  'swift-responder',
+].filter((x): x is string => !!x);
+
 /** Admin wa kampuni anamsajili dereva/mkusanyaji (Edge Function: create-company-staff). */
 export async function createCompanyStaff(input: CreateStaffInput) {
-  const { data, error } = await supabase.functions.invoke('create-company-staff', { body: input });
-  if (error) {
-    // Jaribu kusoma ujumbe halisi kutoka kwa function
-    let msg = error.message;
-    if (/failed to send a request|fetch/i.test(msg)) {
-      throw new Error(
-        "Function 'create-company-staff' haijapatikana. Hakikisha imewekwa (deploy) kwenye Supabase → Edge Functions, kisha jaribu tena."
-      );
+  let lastError: unknown = null;
+
+  for (const slug of STAFF_FUNCTION_SLUGS) {
+    const { data, error } = await supabase.functions.invoke(slug, { body: input });
+
+    if (!error) {
+      if (data?.error) throw new Error(data.error);
+      return data as { user_id: string };
     }
+
+    const ctx = (error as unknown as { context?: Response }).context;
+    const notReachable = /failed to send a request|fetch/i.test(error.message);
+    const notFound = ctx?.status === 404;
+    if (notReachable || notFound) {
+      // Function hii haipo kwa slug hii — jaribu slug inayofuata
+      lastError = error;
+      continue;
+    }
+
+    // Function ilifikiwa na ikarudisha kosa halisi — lionyeshe
+    let msg = error.message;
     try {
-      const ctx = (error as unknown as { context?: Response }).context;
       if (ctx) msg = (await ctx.json()).error || msg;
     } catch {
       /* acha ujumbe wa kawaida */
     }
     throw new Error(msg || 'Imeshindikana kumsajili mfanyakazi.');
   }
-  if (data?.error) throw new Error(data.error);
-  return data as { user_id: string };
+
+  console.error('create-company-staff haikufikiwa:', lastError);
+  throw new Error(
+    'Function ya kusajili wafanyakazi haikufikiwa. Kwenye Supabase → Edge Functions zima "Verify JWT with legacy secret" kwa function hiyo, na hakikisha slug ya URL yake ni sahihi.'
+  );
 }
